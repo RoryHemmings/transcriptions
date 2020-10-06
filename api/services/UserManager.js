@@ -74,4 +74,7 @@ const UserManager = {
   }
 }
 
+// Debug user
+UserManager.createUser('test', 'test');
+
 module.exports = UserManager;

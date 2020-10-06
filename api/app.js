@@ -74,9 +74,24 @@ app.post('/register', async (req, res) => {
   }
 });
 
-app.post('/login', ctx => passport.authenticate('local', (err, user, info) => {
-  console.log('test');
-}));
+app.post('/login', (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+
+    if (user) {
+      return res.json({successful: true, message: ''});
+    } else {
+      return res.json({successful: false, message: info.message});
+    }
+  })(req, res, next);
+});
+
+// app.post('/login', passport.authenticate('local', (err, user, info) => {
+
+//   console.log(err, user, info);
+// }));
 
 // app.post('/login', passport.authenticate('local', {
 //   successRedirect: '/',

@@ -7,6 +7,7 @@ export default class Login extends Component {
 		this.state = {
 			username: "",
 			password: "",
+			error: false,
 		};
 
 		this.onSubmit = this.onSubmit.bind(this);
@@ -20,22 +21,23 @@ export default class Login extends Component {
 			password: this.state.password,
 		};
 
-		fetch("/login", {
+		const r = await fetch("/login", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(data),
-		})
-			// .then((res) => res.status)
-			// .then((status) => {
-			// 	if (status === 201) {
-					
-			// 	} else {
-			// 		// @TODO implement retry to login if acc already exists...
-			// 		alert("");
-			// 	}
-			// });
+		});
+
+		// Because apparently .json() is async.
+		/* Developers who wrote the fetch function - "Yeah lets just make a function that doesn't 
+		 need to by async, async just because it usually goes with other async requests or something. It definately won't make 
+		 some kid get stuck for 45 minutes trying to figure out why calling .json() on an response object 
+		 for some reason causes await to fail" */
+		const res = await r.json();
+
+		if (res.successful) window.location.href = "/";
+		else this.setState({ error: res.message });
 	}
 
 	render() {
@@ -45,7 +47,7 @@ export default class Login extends Component {
 					<h1>Log in</h1>
 
 					<div className="form-group">
-						<label for="username">Username</label>
+						<label htmlFor="username">Username</label>
 						<input
 							name="username"
 							className="form-control"
@@ -58,7 +60,7 @@ export default class Login extends Component {
 					</div>
 
 					<div className="form-group">
-						<label for="password">Password</label>
+						<label htmlFor="password">Password</label>
 						<input
 							name="password"
 							className="form-control"
@@ -69,6 +71,8 @@ export default class Login extends Component {
 							onChange={(e) => this.setState({ password: e.target.value })}
 						></input>
 					</div>
+
+					<p className="text-danger">{this.state.error}</p>
 
 					<button type="submit" className="btn btn-primary">
 						Log in
