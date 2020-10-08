@@ -36,7 +36,7 @@ export default class Login extends Component {
 		 for some reason causes await to fail" */
 		const res = await r.json();
 
-		if (res.successful) window.location.href = "/";
+		if (res.user) window.location.href = "/";
 		else this.setState({ error: res.message });
 	}
 

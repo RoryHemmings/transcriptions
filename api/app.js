@@ -6,7 +6,6 @@ if (process.env.NODE_ENV !== 'production') {
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const passport = require('passport');
 const flash = require('express-flash');
@@ -42,13 +41,12 @@ app.use(express.urlencoded({
 app.use(session({
   secret: process.env.SESSION_SECRET_KEY,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
 }));
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
@@ -57,6 +55,14 @@ app.get('/', (req, res) => {
   res.render('index', {
     title: 'Transcriptions api'
   });
+});
+
+app.get('/checkAuthenticated', (req, res) => {
+  const user = req.session.user;
+  if (user != undefined) {
+    res.json({user: user});
+  }
+  else res.json({user: false});
 });
 
 // GET users listing.
@@ -81,9 +87,11 @@ app.post('/login', (req, res, next) => {
     }
 
     if (user) {
-      return res.json({successful: true, message: ''});
+      user = user.getShorthandVersion();
+      req.session.user = user;
+      return res.json({user: user, message: ''});
     } else {
-      return res.json({successful: false, message: info.message});
+      return res.json({user: user, message: info.message});
     }
   })(req, res, next);
 });

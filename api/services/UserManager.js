@@ -26,6 +26,13 @@ class _User {
     return await bcrypt.compare(password, this._passwordHash);
   }
 
+  getShorthandVersion() {
+    return {
+      username: this._username,
+      id: this._id
+    }
+  }
+
   get username() {
     return this._username;
   }
