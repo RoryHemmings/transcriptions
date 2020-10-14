@@ -1,0 +1,20 @@
+<head>
+  <%- include('./partials/head'); %>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+  <%- include('./partials/navbar') %>
+  <main class="container">
+    <h1 class="text-center">
+      Search
+    </h1>
+    <form action="/search" class="col-md-4 col-centered">
+      <input id="searchbar" type="text" placeholder="Search" class="form-control" />
+    </form>
+  </main>
+
+  <footer class="mt-auto">
+    <%- include('./partials/footer'); %>
+  </footer>
+
+</body>

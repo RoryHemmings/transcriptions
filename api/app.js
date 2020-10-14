@@ -1,3 +1,7 @@
+/** TODO
+ * Look into JWT
+ */
+
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -21,48 +25,74 @@ const app = express();
 // Passport config
 initializePassport(
   passport,
-  async username => {
-      return await UserManager.findUser(username);
-    },
-    async id => {
-      return await UserManager.findUserById(id);
-    }
+  async (username) => {
+    return await UserManager.findUser(username);
+  },
+  async (id) => {
+    return await UserManager.findUserById(id);
+  }
 );
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({
   extended: false
 }));
+app.use(flash());
 app.use(session({
   secret: process.env.SESSION_SECRET_KEY,
   resave: false,
   saveUninitialized: false,
 }));
-app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/static', express.static(path.join(__dirname, 'public')));
 
 // Routes
 // GET home page
 app.get('/', (req, res) => {
-  res.render('index', {
-    title: 'Transcriptions api'
+  res.render('home', {
+    title: `Welcome ${(req.user) ? req.user.username : ''}`,
+    user: req.user
   });
 });
 
-app.get('/checkAuthenticated', (req, res) => {
-  const user = req.session.user;
-  if (user != undefined) {
-    res.json({user: user});
-  }
-  else res.json({user: false});
+// GET serach page
+app.get('/search', (req, res) => {
+  res.render('search', {
+    user: req.user
+  });
+});
+
+// GET explore page
+app.get('/explore', (req, res) => {
+  res.render('explore', {
+    user: req.user
+  });
+});
+
+// GET login page
+app.get('/login', (req, res) => {
+  res.render('login', {
+    user: req.user
+  });
+});
+
+// GET register page
+app.get('/register', (req, res) => {
+  res.render('register', {
+    user: req.user
+  });
+});
+
+app.get('/auth/logout', (req, res) => {
+  req.logOut();
+  res.redirect('/');
 });
 
 // GET users listing.
@@ -72,29 +102,45 @@ app.get('/users', async (req, res) => {
 });
 
 // POST new users
-app.post('/register', async (req, res) => {
+app.post('/auth/register', async (req, res) => {
   if (await UserManager.createUser(req.body.username, req.body.password) != false) {
-    res.status(201).send();
+    res.redirect('/');
   } else {
-    res.status(500).send();
+    res.redirect('/register');
   }
 });
 
-app.post('/login', (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
+app.post('/auth/login', passport.authenticate('local', {
+  successRedirect: '/',
+  failureRedirect: '/login',
+  failureFlash: true,
+}));
 
-    if (user) {
-      user = user.getShorthandVersion();
-      req.session.user = user;
-      return res.json({user: user, message: ''});
-    } else {
-      return res.json({user: user, message: info.message});
-    }
-  })(req, res, next);
+// catch 404 and forward to error handler
+app.use((req, res, next) => {
+  next(createError(404));
 });
+
+// error handler
+app.use((err, req, res, next) => {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+
+module.exports = app;
+
+// app.get('/checkAuthenticated', (req, res) => {
+//   const user = req.session.user;
+//   if (user != undefined) {
+//     res.json({user: user});
+//   }
+//   else res.json({user: false});
+// });
 
 // app.post('/login', passport.authenticate('local', (err, user, info) => {
 
@@ -114,8 +160,23 @@ app.post('/login', (req, res, next) => {
 //     return res.status(400).send('User not found');
 //   }
 
+// app.post('/auth/login', (req, res, next) => {
+//   passport.authenticate('local', (err, user, info) => {
+//     if (err) {
+//       return res.status(500).send(err);
+//     }
+
+//     if (user) {
+//       user = user.getShorthandVersion();
+//       req.session.user = user;
+//       return res.json({user: user, message: ''});
+//     } else {
+//       return res.json({user: user, message: info.message});
+//     }
+//   })(req, res, next);
+// });
+
 //   try {
-//     // returns false if password doesn't match that of the hash of the associated user
 //     if (await user.authenticate(req.body.password)) {
 
 //     } else {
@@ -125,21 +186,3 @@ app.post('/login', (req, res, next) => {
 //     res.status(500).send();
 //   }
 // });
-
-// catch 404 and forward to error handler
-app.use((req, res, next) => {
-  next(createError(404));
-});
-
-// error handler
-app.use((err, req, res, next) => {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;

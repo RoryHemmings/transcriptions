@@ -1,0 +1,31 @@
+<head>
+  <%- include('./partials/head'); %>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+  <%- include('./partials/navbar') %>
+  <main class="container">
+    <h1 class="text-center">
+      Register
+    </h1>
+    <form action="/auth/register" method="POST" class="col-md-3 col-centered">
+      <div className="form-group">
+        <label for="username">Username</label>
+        <input name="username" type="text" class="form-control" placeholder="Username" />
+      </div><br>
+
+      <div className="form-group">
+        <label for="password">Password</label>
+        <input name="password" type="password" class="form-control" placeholder="Password" />
+      </div><br>
+
+      <button type="submit" class="btn btn-primary">Submit</button><br><br>
+      <p class="text-muted">or <a href="/login">Login</a> instead</p>
+    </form>
+  </main>
+
+  <footer class="mt-auto">
+    <%- include('./partials/footer'); %>
+  </footer>
+
+</body>
