@@ -1,6 +1,7 @@
 const {
   v4: uuidv4
 } = require('uuid');
+const database = require('./Database');
 
 const bcrypt = require('bcrypt');
 
@@ -15,8 +16,13 @@ class _User {
 
   // Save user to database
   async saveToDB() {
-    console.log(`Saving user ${this} to database`);
-    users.push(this);
+    // console.log(`Saving user ${this} to database`);
+    // users.push(this);
+    if (!(await database.insertUser(this))) {
+      console.log(`Saved user ${this} to database`);
+    } else {
+      console.error(`Error creating user ${this}`);
+    }
   }
 
   /* Compares password hash associated with user with the password submitted
@@ -32,13 +38,17 @@ class _User {
       id: this._id
     }
   }
+  
+  get id() {
+    return this._id;
+  }
 
   get username() {
     return this._username;
   }
 
-  get id() {
-    return this._id;
+  get passwordHash() {
+    return this._passwordHash;
   }
 
   // String representation of User
@@ -72,16 +82,26 @@ const UserManager = {
     // Return array of users
     return users;
   },
-  findUser: async (username) => {
+  findUserByUsername: async (username) => {
     // Return first occurance of user with same username
-    return users.find(user => user.username == username);
+    const res = await database.findUserByUsername(username);
+    if (res == null) {
+      return null;
+    }
+    
+    return new _User(res.id, res.username, res.passwordHash);
   },
   findUserById: async (id) => {
-    return users.find(user => user.id == id);
+    // Return first occurance of user with same id
+    const res = await database.findUserById(id);
+    if (res == null) {
+      return null;
+    }
+
+    return new _User(res.id, res.username, res.passwordHash);
   }
 }
 
 // Debug user
-UserManager.createUser('test', 'test');
-
+// UserManager.createUser('test', 'test');
 module.exports = UserManager;

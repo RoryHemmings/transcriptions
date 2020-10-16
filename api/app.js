@@ -26,7 +26,7 @@ const app = express();
 initializePassport(
   passport,
   async (username) => {
-    return await UserManager.findUser(username);
+    return await UserManager.findUserByUsername(username);
   },
   async (id) => {
     return await UserManager.findUserById(id);
@@ -92,7 +92,7 @@ app.get('/register', (req, res) => {
 
 app.get('/auth/logout', (req, res) => {
   req.logOut();
-  res.redirect('/');
+  res.redirect('/login');
 });
 
 // GET users listing.
@@ -104,7 +104,7 @@ app.get('/users', async (req, res) => {
 // POST new users
 app.post('/auth/register', async (req, res) => {
   if (await UserManager.createUser(req.body.username, req.body.password) != false) {
-    res.redirect('/');
+    res.redirect('/login');
   } else {
     res.redirect('/register');
   }
