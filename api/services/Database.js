@@ -14,7 +14,7 @@ const db = new sql3.Database(process.env.DATABASE_PATH, (err) => {
 const database = {
   insertUser: async (user) => {
     return new Promise((resolve, reject) => {
-      db.run(`INSERT INTO users(id, username, passwordHash) VALUES(?, ?, ?)`, [user.id, user.username, user.passwordHash], (err, res) => {
+      db.run(`INSERT INTO users(id, username, bio, passwordHash) VALUES(?, ?, ?, ?)`, [user.id, user.username, user.bio, user.passwordHash], (err, res) => {
         resolve(err);
       });
     });
@@ -43,6 +43,16 @@ const database = {
       });
     });
   },
+  updateSettings: async (user) => {
+    return new Promise((resolve, reject) => {
+      db.run(`UPDATE users SET bio = ?, passwordHash = ? WHERE id = ?`, [user.bio, user.passwordHash, user.id], (err) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(true);
+      })
+    });
+  },
   close: () => {
     db.close((err) => {
       if (err) {
@@ -68,6 +78,7 @@ module.exports = database;
   INSERT INTO people (first_name, last_name, age, gender) VALUES ("rick", "sanchez", 35, "m");
   SELECT * FROM people WHERE last_name="bob" ORDER BY age DESC;
   DELETE FROM people WHERE age=5;
+  DROP TABLE table_name; to Delete table
 
   db.all returns all occurances
   db.get returns single occurance

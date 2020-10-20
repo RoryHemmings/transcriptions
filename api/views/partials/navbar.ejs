@@ -11,13 +11,17 @@
 
   <ul class="navbar-nav ml-auto">
     <% if (user) { %>
-      <li class="nav-item">
-        <a class="nav-link" data-method="DELETE" href="/auth/logout">logout</a>
-      </li>
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%= user.username %></a>
+      <div class="dropdown-menu col-md-2 dropdown-menu-right" aria-labelledby="navbarDropdown">
+        <a class="dropdown-item" href="/user/USER_PROFILE">My Profile</a>
+        <a class="dropdown-item" data-method="DELETE" href="/auth/logout">Logout</a>
+      </div>
+    </li>
     <% } else { %>
-      <li class="nav-item">
-        <a class="nav-link" href="/login">Login</a>
-      </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/login">Login</a>
+    </li>
     <% } %>
   </ul>
 </nav>

@@ -26,11 +26,11 @@ const app = express();
 initializePassport(
   passport,
   async (username) => {
-    return await UserManager.findUserByUsername(username);
-  },
-  async (id) => {
-    return await UserManager.findUserById(id);
-  }
+      return await UserManager.findUserByUsername(username);
+    },
+    async (id) => {
+      return await UserManager.findUserById(id);
+    }
 );
 
 // view engine setup
@@ -77,7 +77,7 @@ app.get('/explore', (req, res) => {
 });
 
 // GET login page
-app.get('/login', (req, res) => {
+app.get('/login', checkNotAuthenticated, (req, res) => {
   res.render('login', {
     user: req.user
   });
@@ -90,15 +90,66 @@ app.get('/register', (req, res) => {
   });
 });
 
-app.get('/auth/logout', (req, res) => {
-  req.logOut();
-  res.redirect('/login');
+// Users profile
+app.get('/user/:id', async (req, res) => {
+  if (req.params.id === 'USER_PROFILE') {
+    if (!req.isAuthenticated() || !req.user) {
+      res.redirect('/login');
+      return;
+    }
+    res.redirect(`/user/${req.user.id}`);
+    return;
+  }
+
+  const id = req.params.id;
+
+  const user = await UserManager.findUserById(id);
+  if (user === null) {
+    res.render('profile', {
+      notFound: true,
+      user: req.user
+    });
+    return;
+  }
+
+  const transcriptions = {
+    num: 1
+  };
+
+  let authenticated = false;
+  // TODO Fix potential security risk
+  if (req.user) {
+    if (req.isAuthenticated() && req.user.id === req.params.id) {
+      authenticated = true;
+    }
+  }
+
+  res.render('profile', {
+    targetUser: user,
+    user: req.user,
+    notFound: false,
+    authenticated: authenticated,
+    transcriptions: transcriptions
+  });
+});
+
+app.get('/settings', checkAuthenticated, (req, res) => {
+  console.log("settings")
+  res.render('userSettings', {
+    user: req.user
+  });
 });
 
 // GET users listing.
-app.get('/users', async (req, res) => {
-  const users = await UserManager.getUsers();
-  res.json(users);
+// app.get('/users', async (req, res) => {
+//   const users = await UserManager.getUsers();
+//   res.json(users);
+// });
+
+// Logout
+app.get('/auth/logout', (req, res) => {
+  req.logOut();
+  res.redirect('/login');
 });
 
 // POST new users
@@ -116,6 +167,18 @@ app.post('/auth/login', passport.authenticate('local', {
   failureFlash: true,
 }));
 
+app.post('/settings', async (req, res) => {
+  let user = await UserManager.findUserById(req.user.id);
+  if (req.body.bio != user.bio) {
+    user.bio = req.body.bio;
+
+    if (!user.updateSettings()) {
+      res.status(500);
+    }
+  }
+  res.redirect(`/user/${user.id}`);
+});
+
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
   next(createError(404));
@@ -131,6 +194,22 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.render('error');
 });
+
+function checkAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+
+  res.redirect('login');
+}
+
+function checkNotAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return res.redirect('/');
+  }
+
+  next();
+}
 
 module.exports = app;
 

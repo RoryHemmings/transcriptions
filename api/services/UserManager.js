@@ -5,12 +5,11 @@ const database = require('./Database');
 
 const bcrypt = require('bcrypt');
 
-const users = [];
-
 class _User {
-  constructor(id, username, passwordHash) {
+  constructor(id, username, passwordHash, bio='') {
     this._id = id;
     this._username = username;
+    this._bio = bio;
     this._passwordHash = passwordHash;
   }
 
@@ -32,10 +31,15 @@ class _User {
     return await bcrypt.compare(password, this._passwordHash);
   }
 
+  async updateSettings() {
+    return await database.updateSettings(this);
+  }
+
   getShorthandVersion() {
     return {
       username: this._username,
-      id: this._id
+      id: this._id,
+      bio: this._bio
     }
   }
   
@@ -47,8 +51,16 @@ class _User {
     return this._username;
   }
 
+  get bio() {
+    return this._bio;
+  }
+
   get passwordHash() {
     return this._passwordHash;
+  }
+
+  set bio(bio) {
+    this._bio = bio;
   }
 
   // String representation of User
@@ -89,7 +101,7 @@ const UserManager = {
       return null;
     }
     
-    return new _User(res.id, res.username, res.passwordHash);
+    return new _User(res.id, res.username, res.passwordHash, res.bio);
   },
   findUserById: async (id) => {
     // Return first occurance of user with same id
@@ -98,7 +110,7 @@ const UserManager = {
       return null;
     }
 
-    return new _User(res.id, res.username, res.passwordHash);
+    return new _User(res.id, res.username, res.passwordHash, res.bio);
   }
 }
 

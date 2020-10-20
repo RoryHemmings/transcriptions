@@ -23,11 +23,10 @@ main {
   margin: 25px;
 }
 
-footer {
-  bottom: 0;
-  height: 50px;
-}
-
 .col-centered {
   margin: 0 auto;
+}
+
+.dropdown-menu {
+  margin-top: 10px;
 }

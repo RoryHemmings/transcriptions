@@ -1,0 +1,34 @@
+<head>
+  <%- include('./partials/head'); %>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+  <%- include('./partials/navbar') %>
+  <main class="container">
+    <% if (notFound) { %>
+      <h1>User Not Found</h1>
+    <% } else { %>
+      <div class="container-fluid">
+        <div>
+          <h1 class="text-center">
+            <%=targetUser.username%>
+          </h1>
+        </div>
+        <h5>About Me</h5>
+        <p><%=targetUser.bio%></p>
+
+        <div id="transcriptions">
+          <p>Num Transcriptions: <%=transcriptions.num%></p>
+        </div>
+        <% if (authenticated) { %>
+          <a class="btn btn-primary float-right" href="/settings">Edit</a>
+        <% } %>
+      </div>
+    <% } %>
+  </main>
+
+  <footer class="mt-auto">
+    <%- include('./partials/footer'); %>
+  </footer>
+
+</body>
