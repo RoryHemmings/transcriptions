@@ -69,8 +69,35 @@ class _User {
   }
 }
 
+function checkValidUsername(username) {
+  if (username.length < 3 || username.length > 20) {
+    return false;
+  }
+
+  // Check if username is alphanumeric
+  const regExp = /^[A-Za-z0-9]+$/;
+  return username.match(regExp);
+}
+
+function checkValidPassword(password) {
+  return password.length >= 6 && password.length < 20;
+} 
+
 const UserManager = {
   createUser: async (username, password) => {
+    // If user with that username already exists
+    if (!checkValidUsername(username)) {
+      return 2;
+    }
+
+    if (!checkValidPassword(password)) {
+      return 3;
+    }
+
+    if (await UserManager.findUserByUsername(username) != null) {
+      return 1;
+    }
+
     try {
       // Creates "unique" id for user (has an insanely low chance of ever being repeated)
       const id = uuidv4();
@@ -80,19 +107,15 @@ const UserManager = {
       const hashedPassword = await bcrypt.hash(password, salt);
 
       // Save new user
-      // @TODO make sure that users doesn't already exist
       const user = new _User(id, username, hashedPassword);
       user.saveToDB();
 
-      return true;
+      // Success
+      return 0;
     } 
     catch {
-      return false;
+      return -1;
     }
-  },
-  getUsers: async () => {
-    // Return array of users
-    return users;
   },
   findUserByUsername: async (username) => {
     // Return first occurance of user with same username

@@ -140,12 +140,6 @@ app.get('/settings', checkAuthenticated, (req, res) => {
   });
 });
 
-// GET users listing.
-// app.get('/users', async (req, res) => {
-//   const users = await UserManager.getUsers();
-//   res.json(users);
-// });
-
 // Logout
 app.get('/auth/logout', (req, res) => {
   req.logOut();
@@ -154,9 +148,20 @@ app.get('/auth/logout', (req, res) => {
 
 // POST new users
 app.post('/auth/register', async (req, res) => {
-  if (await UserManager.createUser(req.body.username, req.body.password) != false) {
+  const result = await UserManager.createUser(req.body.username, req.body.password);
+  if (result === 0) {
     res.redirect('/login');
-  } else {
+  } else if (result === 1) {
+    req.flash('error', 'user already exists');
+    res.redirect('/register');
+  } else if (result === 2) {
+    req.flash('error', 'invalid username (usernames must consist of alphanumeric characters only, and be between 3 and 20 characters long');
+    res.redirect('/register');
+  } else if (result === 3) {
+    req.flash('error', 'invalid password (passwords must be between 6 and 20 characters long)');
+    res.redirect('/register');
+  } else if (result === -1) {
+    req.flash('error', 'internal server error');
     res.redirect('/register');
   }
 });
