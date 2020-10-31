@@ -14,13 +14,18 @@ const logger = require('morgan');
 const passport = require('passport');
 const flash = require('express-flash');
 const session = require('express-session');
+const multer = require('multer');
 
 // Services
 const UserManager = require('./services/UserManager');
-const initializePassport = require('./passport-config')
+const TranscriptionManager = require('./services/TranscriptionManager');
+const initializePassport = require('./passport-config');
 
 // Definitions
 const app = express();
+const upload = multer({
+  dest: 'public/uploads/'
+});
 
 // Passport config
 initializePassport(
@@ -62,6 +67,12 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/upload', checkAuthenticated, (req, res) => {
+  res.render('upload', {
+    user: req.user
+  });
+});
+
 // GET serach page
 app.get('/search', (req, res) => {
   res.render('search', {
@@ -92,6 +103,7 @@ app.get('/register', (req, res) => {
 
 // Users profile
 app.get('/user/:id', async (req, res) => {
+  // TODO refactor this system to pass user to browser and route directly to id
   if (req.params.id === 'USER_PROFILE') {
     if (!req.isAuthenticated() || !req.user) {
       res.redirect('/login');
@@ -112,9 +124,7 @@ app.get('/user/:id', async (req, res) => {
     return;
   }
 
-  const transcriptions = {
-    num: 1
-  };
+  const transcriptions = await TranscriptionManager.findTranscriptionsByUsername(user.username);
 
   let authenticated = false;
   // TODO Fix potential security risk
@@ -133,8 +143,17 @@ app.get('/user/:id', async (req, res) => {
   });
 });
 
+app.get('/transcription/:id', async (req, res) => {
+  const id = req.params.id;
+  const transcription = await TranscriptionManager.findTranscriptionById(id);
+
+  res.render('transcription', {
+    user: req.user,
+    transcription: transcription
+  });
+});
+
 app.get('/settings', checkAuthenticated, (req, res) => {
-  console.log("settings")
   res.render('userSettings', {
     user: req.user
   });
@@ -161,6 +180,7 @@ app.post('/auth/register', async (req, res) => {
     req.flash('error', 'invalid password (passwords must be between 6 and 20 characters long)');
     res.redirect('/register');
   } else if (result === -1) {
+    x
     req.flash('error', 'internal server error');
     res.redirect('/register');
   }
@@ -182,6 +202,28 @@ app.post('/settings', async (req, res) => {
     }
   }
   res.redirect(`/user/${user.id}`);
+});
+
+app.post('/upload', upload.single('file'), async (req, res) => {
+  if (!req.isAuthenticated()) {
+    res.redirect('/login');
+  }
+
+  if (!req.file) {
+    res.flash('error', 'Internal Server Error');
+  }
+
+  const result = await TranscriptionManager.createTranscription(req.body.title, req.file, req.user.username, ["tag", "tag1"]);
+  if (result == 0) {
+    res.redirect('/user/' + req.user.id);
+  } else if (result == 2) {
+    req.flash('error', 'Invalid Title (title lengths must be between 1 and 100 characters long');
+    res.redirect('/upload');
+  } else if (result == 3) {
+    req.flash('error', 'Invalid File. Make sure that your file is not over 6MB, and that is either a png, jpg, or pdf');
+    res.redirect('/upload');
+  }
+
 });
 
 // catch 404 and forward to error handler

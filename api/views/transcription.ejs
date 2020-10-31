@@ -1,0 +1,21 @@
+<!-- Url endpoint /transcriptions/uuid -->
+<!-- Will show based off of transcription uuid -->
+
+<head>
+  <%- include('./partials/head'); %>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+  <%- include('./partials/navbar') %>
+  <main class="container">
+    <h1 class="text-center">
+      <%=transcription.title%>
+    </h1>
+    <p class="text-muted">Author: <%=transcription.cbUsername%></p>
+  </main>
+
+  <footer class="mt-auto">
+    <%- include('./partials/footer'); %>
+  </footer>
+
+</body>

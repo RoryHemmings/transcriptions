@@ -30,3 +30,34 @@ main {
 .dropdown-menu {
   margin-top: 10px;
 }
+
+#transcriptions {
+  padding: 3.5%;
+}
+
+.flex-container {
+  display: flex;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-item {
+  flex: 1;
+}
+
+.img-cover {
+  object-fit: cover;
+}
+
+.transcription {
+  margin: 25px;
+  padding: 10px;
+  border: 2px solid black;
+  background-color: white;
+}
+
+.transcription:hover {
+  background-color: #d4d4d4;
+}

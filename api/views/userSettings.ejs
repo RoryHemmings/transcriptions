@@ -4,17 +4,16 @@
 
 <body class="d-flex flex-column min-vh-100">
   <%- include('./partials/navbar') %>
-  <main class="container">
+  <main class="container col-md-4">
     <h1 class="text-center">
       <%=user.username%>
     </h1>
     <form action="/settings" method="POST">
       <div class="form-group">
         <label for="bio">About Me:</label>
-        <input type="text" class="form-control" name="bio" value="<%=user.bio%>">
-        <small id="helpId" class="form-text text-muted">Update Bio</small>
+        <textarea type="text" class="form-control" name="bio"><%=user.bio%></textarea>
       </div>
-      <button type="settings" class="btn btn-primary">Update Settings</button>
+      <button type="settings" class="btn btn-primary float-right">Update Settings</button>
     </form>
   </main>
 

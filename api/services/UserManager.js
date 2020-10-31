@@ -5,7 +5,7 @@ const database = require('./Database');
 
 const bcrypt = require('bcrypt');
 
-class _User {
+class User {
   constructor(id, username, passwordHash, bio='') {
     this._id = id;
     this._username = username;
@@ -17,11 +17,12 @@ class _User {
   async saveToDB() {
     // console.log(`Saving user ${this} to database`);
     // users.push(this);
-    if (!(await database.insertUser(this))) {
-      console.log(`Saved user ${this} to database`);
-    } else {
-      console.error(`Error creating user ${this}`);
-    }
+    database.insertUser(this)
+      .then(res => {
+        console.log(`Saved user ${this} to database`);
+      }).catch(err => {
+        console.error(`Error creating user ${this}`);
+      });
   }
 
   /* Compares password hash associated with user with the password submitted
@@ -107,7 +108,7 @@ const UserManager = {
       const hashedPassword = await bcrypt.hash(password, salt);
 
       // Save new user
-      const user = new _User(id, username, hashedPassword);
+      const user = new User(id, username, hashedPassword);
       user.saveToDB();
 
       // Success
@@ -124,7 +125,7 @@ const UserManager = {
       return null;
     }
     
-    return new _User(res.id, res.username, res.passwordHash, res.bio);
+    return new User(res.id, res.username, res.passwordHash, res.bio);
   },
   findUserById: async (id) => {
     // Return first occurance of user with same id
@@ -133,7 +134,7 @@ const UserManager = {
       return null;
     }
 
-    return new _User(res.id, res.username, res.passwordHash, res.bio);
+    return new User(res.id, res.username, res.passwordHash, res.bio);
   }
 }
 
