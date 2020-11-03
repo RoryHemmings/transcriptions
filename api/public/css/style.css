@@ -21,6 +21,11 @@ a {
 
 main {
   margin: 25px;
+  padding: 25px;
+}
+
+embed {
+  margin: 3% 0;
 }
 
 .col-centered {
@@ -33,6 +38,11 @@ main {
 
 #transcriptions {
   padding: 3.5%;
+}
+
+#transcription {
+  display: block;
+  margin: 3% auto;
 }
 
 .flex-container {

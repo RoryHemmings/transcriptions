@@ -1,7 +1,3 @@
-/** TODO
- * Look into JWT
- */
-
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -23,9 +19,33 @@ const initializePassport = require('./passport-config');
 
 // Definitions
 const app = express();
-const upload = multer({
-  dest: 'public/uploads/'
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads'));
+  },
+  filename: (req, file, cb) => {
+    // Aparently windows doesn't accept ':' in files (thanks alot error message which said absolutely nothing about that)
+    const filename = new Date().toISOString().replace(/:/g, '-');
+
+    let suffix = '';
+    if (file.mimetype == 'image/png') {
+      suffix = '.png';
+    } else if (file.mimetype == 'image/jpeg') {
+      suffix = '.jpg';
+    } else if (file.mimetype == 'application/pdf') {
+      suffix = '.pdf';
+    }
+    cb(null, filename + suffix);
+  }
 });
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 6000000
+  }
+}).single('file');
 
 // Passport config
 initializePassport(
@@ -57,6 +77,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 // GET home page
@@ -204,26 +225,38 @@ app.post('/settings', async (req, res) => {
   res.redirect(`/user/${user.id}`);
 });
 
-app.post('/upload', upload.single('file'), async (req, res) => {
+app.post('/upload', async (req, res) => {
   if (!req.isAuthenticated()) {
     res.redirect('/login');
   }
 
-  if (!req.file) {
-    res.flash('error', 'Internal Server Error');
-  }
+  upload(req, res, async (err) => {
+    if (err) {
+      if (err.message == 'File too large') {
+        req.flash('error', 'File exceeds maximum file size (6MB)');
+        res.redirect('/upload');
+        return;
+      }
 
-  const result = await TranscriptionManager.createTranscription(req.body.title, req.file, req.user.username, ["tag", "tag1"]);
-  if (result == 0) {
-    res.redirect('/user/' + req.user.id);
-  } else if (result == 2) {
-    req.flash('error', 'Invalid Title (title lengths must be between 1 and 100 characters long');
-    res.redirect('/upload');
-  } else if (result == 3) {
-    req.flash('error', 'Invalid File. Make sure that your file is not over 6MB, and that is either a png, jpg, or pdf');
-    res.redirect('/upload');
-  }
+      req.flash('error', err.message);
+      res.redirect('/upload');
+    } else {
+      if (!req.file) {
+        req.flash('error', 'Internal Server Error');
+        res.redirect('/upload');
+      }
 
+      const error = await TranscriptionManager.createTranscription(req.body.title, req.file, req.user.username, ["tag", "tag1"]);
+      if (!error) {
+        res.redirect('/user/' + req.user.id);
+      } else {
+        req.flash('error', error);
+        res.redirect('/upload');
+      }
+    }
+  });
+
+  return;
 });
 
 // catch 404 and forward to error handler
@@ -259,56 +292,3 @@ function checkNotAuthenticated(req, res, next) {
 }
 
 module.exports = app;
-
-// app.get('/checkAuthenticated', (req, res) => {
-//   const user = req.session.user;
-//   if (user != undefined) {
-//     res.json({user: user});
-//   }
-//   else res.json({user: false});
-// });
-
-// app.post('/login', passport.authenticate('local', (err, user, info) => {
-
-//   console.log(err, user, info);
-// }));
-
-// app.post('/login', passport.authenticate('local', {
-//   successRedirect: '/',
-//   failureRedirect: '/login',
-//   failureFlash: true,
-//   successFlash: true
-// }))
-
-// app.post('/login', async (req, res) => {
-//   const user = UserManager.findUser(req.body.username);
-//   if (user == null) {
-//     return res.status(400).send('User not found');
-//   }
-
-// app.post('/auth/login', (req, res, next) => {
-//   passport.authenticate('local', (err, user, info) => {
-//     if (err) {
-//       return res.status(500).send(err);
-//     }
-
-//     if (user) {
-//       user = user.getShorthandVersion();
-//       req.session.user = user;
-//       return res.json({user: user, message: ''});
-//     } else {
-//       return res.json({user: user, message: info.message});
-//     }
-//   })(req, res, next);
-// });
-
-//   try {
-//     if (await user.authenticate(req.body.password)) {
-
-//     } else {
-
-//     }
-//   } catch {
-//     res.status(500).send();
-//   }
-// });

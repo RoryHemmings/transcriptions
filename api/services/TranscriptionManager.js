@@ -66,33 +66,40 @@ class Transcription {
 
 function checkValidTitle(title) {
   // If title is undefined or has a length of more than 100 characters
-  return !(!title || title.length > 100 || title.length < 1);
+  if (!title || title.length > 100 || title.length < 1) {
+    return "Title must be between 1 and 100 characters long";
+  }
+  return undefined;
 }
 
 function checkValidFileInfo(fileInfo) {
   if (!fileInfo || !fileInfo.size) {
-    return false;
+    return "Invalid File";
   }
 
   if (fileInfo.size > 6000000) {
-    return false;
+    return "File exceeds maximum file size (6MB)";
   }
 
   if (!(fileInfo.mimetype == 'image/png' || fileInfo.mimetype == 'image/jpeg' || fileInfo.mimetype == 'application/pdf')) {
-    return false;
+    return "Only file types pdf, png, and jpg are accepted";
   }
 
-  return true;
+  return undefined;
 }
 
 const TranscriptionManager = {
   createTranscription: async (title, fileInfo, cbUsername, tags) => {
-    if (!checkValidTitle(title)) {
-      return 2;
+    const titleError = checkValidTitle(title);
+    const fileInfoError = checkValidFileInfo(fileInfo);
+    if (titleError) {
+      // Returns error
+      return titleError;
     }
 
-    if (!checkValidFileInfo(fileInfo)) {
-      return 3;
+    if (fileInfoError) {
+      // Returns error
+      return fileInfoError;
     }
 
     const id = uuidv4();
@@ -100,7 +107,8 @@ const TranscriptionManager = {
 
     await transcription.saveToDB();
 
-    return 0;
+    // Success
+    return undefined;
   },
   findTranscriptionById: async (id) => {
     const res = await database.findTranscriptionById(id)

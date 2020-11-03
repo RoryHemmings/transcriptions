@@ -7,11 +7,31 @@
 
 <body class="d-flex flex-column min-vh-100">
   <%- include('./partials/navbar') %>
-  <main class="container">
+  <main class="container col-md-6">
     <h1 class="text-center">
-      <%=transcription.title%>
+      Transcription
     </h1>
-    <p class="text-muted">Author: <%=transcription.cbUsername%></p>
+    <div class="row">
+      <div id="transcription">
+        <h5><%=transcription.title%></h5>
+        <p class="text-muted">Author: <%=transcription.cbUsername%></p>
+
+        <% if (transcription.mimetype == 'image/png' || transcription.mimetype == 'image/jpeg') { %>
+        <img src="/uploads/<%=transcription.path.substring(transcription.path.length - 29, transcription.path.length)%>"
+          alt="transcription" />
+        <% } else if (transcription.mimetype == 'application/pdf') { %>
+        <!-- <embed src="https://drive.google.com/viewerng/viewer?embedded=true&url=/static/uploads/<%=transcription.path.substring(transcription.path.length - 33, transcription.path.length)%>.pdf" 
+          width="1000" height="600"/> -->
+        <embed
+          src="/uploads/<%=transcription.path.substring(transcription.path.length - 29, transcription.path.length)%>"
+          width="1000" height="600" />
+        <% } else { %>
+        <p>This transcription file type does not support preview</p>
+        <% } %>
+          
+        <a href="/uploads/<%=transcription.path.substring(transcription.path.length - 29, transcription.path.length)%>" download>Download</a>
+      </div>
+    </div>
   </main>
 
   <footer class="mt-auto">
