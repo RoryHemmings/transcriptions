@@ -147,6 +147,14 @@ app.get('/user/:id', async (req, res) => {
 
   const transcriptions = await TranscriptionManager.findTranscriptionsByUsername(user.username);
 
+  /**
+   *  Sort from most recent to least recent  
+   *  Dates are greater if more recent
+   */ 
+  transcriptions.sort((a, b) => {
+    return (new Date(a.dateCreated) <= new Date(b.dateCreated)) ? 1 : -1;
+  });
+
   let authenticated = false;
   // TODO Fix potential security risk
   if (req.user) {
@@ -167,6 +175,8 @@ app.get('/user/:id', async (req, res) => {
 app.get('/transcription/:id', async (req, res) => {
   const id = req.params.id;
   const transcription = await TranscriptionManager.findTranscriptionById(id);
+
+  console.log(transcription);
 
   res.render('transcription', {
     user: req.user,
@@ -201,7 +211,6 @@ app.post('/auth/register', async (req, res) => {
     req.flash('error', 'invalid password (passwords must be between 6 and 20 characters long)');
     res.redirect('/register');
   } else if (result === -1) {
-    x
     req.flash('error', 'internal server error');
     res.redirect('/register');
   }

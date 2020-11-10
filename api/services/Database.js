@@ -59,11 +59,12 @@ const database = {
   },
   insertTranscription: (transcription) => {
     return new Promise((resolve, reject) => {
-      db.run('INSERT INTO transcriptions (id, title, encoding, mimetype, size, path, cbUsername, tags) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+      db.run('INSERT INTO transcriptions (id, title, encoding, mimetype, size, filename, cbUsername, dateCreated, tags) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [transcription.id, transcription.title,
           transcription.encoding, transcription.mimetype,
-          transcription.size, transcription.path,
+          transcription.size, transcription.filename,
           transcription.cbUsername,
+          transcription.dateCreated,
           JSON.stringify(transcription.tags)
         ],
         (err, res) => {
@@ -131,7 +132,7 @@ module.exports = database;
   db.run can be used to insert data or any other command (calls callback)
 
   tags are stringified arrays since sqlite cant store arrays
-  CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, path TEXT, cbUsername TEXT, tags TEXT);
+  CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, cbUsername TEXT, dateCreated TEXT, tags TEXT);
 
   751f4448-d7bd-4fc9-a2eb-15eef9bfb84d
 */

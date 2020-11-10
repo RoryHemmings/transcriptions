@@ -1,5 +1,8 @@
 <head>
   <%- include('./partials/head'); %>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"
+    integrity="sha512-Z8CqofpIcnJN80feS2uccz+pXWgZzeKxDsDNMD/dJ6997/LSRY+W4NmEt9acwR+Gt9OHN0kkI1CTianCwoqcjQ=="
+    crossorigin="anonymous"></script>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -28,11 +31,15 @@
           <div class="flex-item" id="transcription-info">
             <h5 id="title"><%=transcription.title%></h5>
             <p class="text-muted"><%=transcription.cbUsername%></p>
+            <p class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
           </div>
           <div class="flex-item" id="transcription-preview">
-            <img
-              src="/uploads/<%=transcription.path.substring(transcription.path.length - 29, transcription.path.length)%>"
-              alt="preview" width="200" height="258" class="img-cover" />
+            <!-- Test it out -->
+            <% if (transcription.mimetype == 'application/pdf') { %>
+              <img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/<%=transcription.filename%>" width="200" height="258" />
+            <% } else { %>
+              <img src="/uploads/<%=transcription.filename%>" alt="preview" width="200" height="258" class="img-cover" />
+            <% } %>
           </div>
         </div>
         <% }) %>
@@ -45,4 +52,5 @@
     <%- include('./partials/footer'); %>
   </footer>
 
+  <script src="/static/js/pdf_utils.js"></script>
 </body>
