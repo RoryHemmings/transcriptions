@@ -11,26 +11,65 @@
     <h1 class="text-center">
       Transcription
     </h1>
-    <div class="row">
-      <div id="transcription">
-        <h5><%=transcription.title%></h5>
-        <p class="text-muted">Author: <%=transcription.cbUsername%></p>
-        <p class="text-muted">Date Created: <%=new Date(transcription.dateCreated).toLocaleString()%></p>
-
-        <% if (transcription.mimetype == 'image/png' || transcription.mimetype == 'image/jpeg') { %>
-        <img src="/uploads/<%=transcription.filename%>"
-          alt="transcription" />
-        <% } else if (transcription.mimetype == 'application/pdf') { %>
-        <!-- <embed src="https://drive.google.com/viewerng/viewer?embedded=true&url=/static/uploads/<%=transcription.filename%>" 
+    <div class="row" id="transcription">
+      <h5><%=transcription.title%></h5>
+      <p class="text-muted">Author: <%=transcription.cbUsername%></p>
+      <p class="text-muted">Date Created: <%=new Date(transcription.dateCreated).toLocaleString()%></p>
+      <a href="/uploads/<%=transcription.filename%>" download>Download</a>
+      <% if (transcription.mimetype == 'image/png' || transcription.mimetype == 'image/jpeg') { %>
+      <img src="/uploads/<%=transcription.filename%>" alt="transcription" />
+      <% } else if (transcription.mimetype == 'application/pdf') { %>
+      <!-- <embed src="https://drive.google.com/viewerng/viewer?embedded=true&url=/static/uploads/<%=transcription.filename%>" 
           width="1000" height="600"/> -->
-        <embed
-          src="/uploads/<%=transcription.filename%>"
-          width="1000" height="600" />
-        <% } else { %>
-        <p>This transcription file type does not support preview</p>
-        <% } %>
-          
-        <a href="/uploads/<%=transcription.filename%>" download>Download</a>
+      <embed src="/uploads/<%=transcription.filename%>" width="1000" height="600" />
+      <% } else { %>
+      <p>This transcription file type does not support preview</p>
+      <% } %>
+    </div>
+    </div>
+    <div class="row" id="interactions">
+      <div class="container">
+        <div class="row" id="likes-dislikes">
+          <% const likes = JSON.parse(transcription.likes); %>
+          <% const dislikes = JSON.parse(transcription.dislikes); %>
+
+          <% if (user != undefined) { %>
+
+          <% if (!likes.includes(user.id)) { %>
+          <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()">Like</button>
+          <% } else { %>
+          <button name="like-button" id="like-button" class="btn btn-secondary" onclick="likePost()"
+            disabled>Like</button>
+          <% } %>
+
+          <% if (!dislikes.includes(user.id)) { %>
+          <button name="dislike-button" id="dislike-button" class="btn btn-danger"
+            onclick="dislikePost()">Dislike</button>
+          <% } else { %>
+          <button name="dislike-button" id="dislike-button" class="btn btn-secondary" onclick="dislikePost()"
+            disabled>Dislike</button>
+          <% } %>
+
+          <% } else {%>
+          <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()">Like</button>
+          <button name="dislike-button" id="dislike-button" class="btn btn-danger"
+            onclick="dislikePost()">Dislike</button>
+          <% } %>
+
+          <p class="text-justify" id="num-likes">Likes: <%=likes.length%></p>
+          <p class="text-justify" id="num-dislikes"><br>Dislikes: <%=dislikes.length%></p>
+        </div>
+        <div class="row" id="new-comment">
+          <div class="form-group">
+            <label for="comment-input">Comment</label>
+            <input type="text" class="form-control" name="comment-input" id="comment-input" aria-describedby="helpId"
+              placeholder="Comment" />
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+        <div class="row" id="comments">
+
+        </div>
       </div>
     </div>
   </main>
@@ -38,5 +77,102 @@
   <footer class="mt-auto">
     <%- include('./partials/footer'); %>
   </footer>
+
+  <script>
+    function likePost() {
+      // Prevent from removing dislikes by liking
+      if (transcriptionHasBeenRated()) {
+        updateNumDislikes(-1);
+      }
+
+      updateNumLikes(1);
+
+      setLikeButton(false);
+      setDislikeButton(true);
+
+      fetch('/transcription/like', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          transcriptionId: '<%= transcription.id %>'
+        })
+      }).then(res => {
+        if (res.redirected) {
+          window.location.replace(res.url);
+        }
+      });
+    }
+
+    function dislikePost() {
+      // Prevent removing likes by disliking
+      if (transcriptionHasBeenRated()) {
+        updateNumLikes(-1);
+      }
+
+      updateNumDislikes(1);
+
+      setLikeButton(true);
+      setDislikeButton(false);
+
+      fetch('/transcription/dislike', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          transcriptionId: '<%= transcription.id %>'
+        })
+      }).then(res => {
+        if (res.redirected) {
+          window.location.replace(res.url);
+        }
+      });
+    }
+
+    function createComment() {
+
+    }
+
+    function transcriptionHasBeenRated() {
+      const liked = document.getElementById('like-button').disabled;
+      const disliked = document.getElementById('dislike-button').disabled;
+
+      return liked || disliked;
+    }
+
+    function updateNumLikes(num) {
+      let numLikes = Number(document.getElementById('num-likes').innerHTML.split(' ')[1]);
+      document.getElementById('num-likes').innerHTML = 'Likes: ' + (numLikes + num);
+    }
+
+    function updateNumDislikes(num) {
+      let numDislikes = Number(document.getElementById('num-dislikes').innerHTML.split(' ')[1]);
+      document.getElementById('num-dislikes').innerHTML = 'Dislikes: ' + (numDislikes + num);
+    }
+
+    function setLikeButton(enable) {
+      let likeButton = document.getElementById('like-button');
+      if (enable) {
+        likeButton.disabled = false;
+        likeButton.setAttribute('class', 'btn btn-primary');
+      } else {
+        likeButton.disabled = true;
+        likeButton.setAttribute('class', 'btn btn-secondary');
+      }
+    }
+
+    function setDislikeButton(enable) {
+      let dislikeButton = document.getElementById('dislike-button');
+      if (enable) {
+        dislikeButton.disabled = false;
+        dislikeButton.setAttribute('class', 'btn btn-danger');
+      } else {
+        dislikeButton.disabled = true;
+        dislikeButton.setAttribute('class', 'btn btn-secondary');
+      }
+    }
+  </script>
 
 </body>

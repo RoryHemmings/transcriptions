@@ -1,5 +1,5 @@
 /**
- * Instead of clas based approach to storing transcriptions, I'm going to try to use facotry functions/Object Literals
+ * Instead of class based approach to storing transcriptions, I'm going to try to use facotry functions/Object Literals
  * Then I can use helper functions on in the TranscriptionManager struct to solve all functionality
  */
 
@@ -64,6 +64,15 @@ async function saveToDB(transcription) {
 		});
 }
 
+async function updateTranscription(transcription) {
+	let res = null;
+	await database.updateTranscription(transcription).catch((err) => {
+		res = err;
+	});
+
+	return res;
+}
+
 const TranscriptionManager = {
 	createTranscription: async (title, fileInfo, cbUsername, tags) => {
 		const titleError = checkValidTitle(title);
@@ -85,6 +94,9 @@ const TranscriptionManager = {
 			cbUsername,
 			dateCreated,
 			tags,
+			likes: [], // Will be stored as an array of user_ids
+			dislikes: [],
+			comments: [],
 			encoding: fileInfo.encoding,
 			mimetype: fileInfo.mimetype,
 			size: fileInfo.size,
@@ -111,6 +123,66 @@ const TranscriptionManager = {
 			});
 
 		return res;
+	},
+	likeTranscription: async (transcriptionId, userId) => {
+		// Get transcription by id
+		let transcription = await TranscriptionManager.findTranscriptionById(
+			transcriptionId
+		).catch((err) => {
+			console.error(err);
+			return err;
+		});
+
+		// Parse likes and dislikes into arrays
+		transcription.likes = JSON.parse(transcription.likes);
+		transcription.dislikes = JSON.parse(transcription.dislikes);
+
+		// Make sure that user hasn't already liked the post
+		if (transcription.likes.includes(userId)) {
+			return null;
+		}
+
+		// Remove user from dislikes so that they cant both like and dislike the post at the same time
+		const i = transcription.dislikes.indexOf(userId);
+		if (i != -1) {
+			transcription.dislikes.splice(i, 1);
+		}
+
+		// Add userId to likes array
+		transcription.likes.push(userId);
+
+		// Update transcription in database
+		updateTranscription(transcription);
+	},
+	dislikeTranscription: async (transcriptionId, userId) => {
+		// Get transcription by id
+		let transcription = await TranscriptionManager.findTranscriptionById(
+			transcriptionId
+		).catch((err) => {
+			console.error(err);
+			return err;
+		});
+
+		// Turn likes and dislikes into an object
+		transcription.likes = JSON.parse(transcription.likes);
+		transcription.dislikes = JSON.parse(transcription.dislikes);
+
+		// Make sure post isn't already disliked
+		if (transcription.dislikes.includes(userId)) {
+			return null;
+		}
+
+		// Make it so that the user cant like and dislike at the same time
+		const i = transcription.likes.indexOf(userId);
+		if (i != -1) {
+			transcription.likes.splice(i, 1);
+		}
+
+		// Add users id to dislike array
+		transcription.dislikes.push(userId);
+
+		// Update transcription in the database
+		updateTranscription(transcription);
 	},
 };
 

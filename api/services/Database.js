@@ -49,7 +49,7 @@ const database = {
   },
   updateSettings: async (user) => {
     return new Promise((resolve, reject) => {
-      db.run(`UPDATE users SET bio = ?, passwordHash = ? WHERE id = ?`, [user.bio, user.passwordHash, user.id], (err) => {
+      db.run('UPDATE users SET bio = ?, passwordHash = ? WHERE id = ?', [user.bio, user.passwordHash, user.id], (err) => {
         if (err) {
           reject(err);
         }
@@ -57,15 +57,18 @@ const database = {
       })
     });
   },
-  insertTranscription: (transcription) => {
+  insertTranscription: async (transcription) => {
     return new Promise((resolve, reject) => {
-      db.run('INSERT INTO transcriptions (id, title, encoding, mimetype, size, filename, cbUsername, dateCreated, tags) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      db.run('INSERT INTO transcriptions (id, title, encoding, mimetype, size, filename, cbUsername, dateCreated, tags, likes, dislikes, comments) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [transcription.id, transcription.title,
           transcription.encoding, transcription.mimetype,
           transcription.size, transcription.filename,
           transcription.cbUsername,
           transcription.dateCreated,
-          JSON.stringify(transcription.tags)
+          JSON.stringify(transcription.tags),
+          JSON.stringify(transcription.likes),
+          JSON.stringify(transcription.dislikes),
+          JSON.stringify(transcription.comments)
         ],
         (err, res) => {
           if (err) {
@@ -76,7 +79,25 @@ const database = {
         });
     });
   },
-  findTranscriptionById: (id) => {
+  updateTranscription: async (transcription) => {
+    // Prevents from stringifying multiple times in a row
+    const likes = (transcription.likes == '[]') ? '[]' : JSON.stringify(transcription.likes);
+    const dislikes = (transcription.dislikes == '[]') ? '[]' : JSON.stringify(transcription.dislikes); 
+    const comments = (transcription.comments == '[]') ? '[]' : JSON.stringify(transcription.comments);
+
+    return new Promise((resolve, reject) => {
+      db.run('UPDATE transcriptions SET title = ?, likes = ?, dislikes = ?, comments = ? WHERE id = ?',
+        [transcription.title, likes, dislikes, comments, transcription.id], (err, res) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          }
+
+          resolve(res);
+        });
+    });
+  },
+  findTranscriptionById: async (id) => {
     return new Promise((resolve, reject) => {
       db.get('SELECT * FROM transcriptions WHERE id = ?', [id], (err, res) => {
         if (err) {
@@ -87,7 +108,7 @@ const database = {
       });
     });
   },
-  findTranscriptionsByUsername: (username) => {
+  findTranscriptionsByUsername: async (username) => {
     return new Promise((resolve, reject) => {
       db.all('SELECT * FROM transcriptions WHERE cbUsername = ?', [username], (err, res) => {
         if (err) {
@@ -132,7 +153,7 @@ module.exports = database;
   db.run can be used to insert data or any other command (calls callback)
 
   tags are stringified arrays since sqlite cant store arrays
-  CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, cbUsername TEXT, dateCreated TEXT, tags TEXT);
+  CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, cbUsername TEXT, dateCreated TEXT, tags TEXT, likes TEXT, dislikes TEXT, comments TEXT);
 
   751f4448-d7bd-4fc9-a2eb-15eef9bfb84d
 */

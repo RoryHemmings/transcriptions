@@ -150,7 +150,7 @@ app.get('/user/:id', async (req, res) => {
   /**
    *  Sort from most recent to least recent  
    *  Dates are greater if more recent
-   */ 
+   */
   transcriptions.sort((a, b) => {
     return (new Date(a.dateCreated) <= new Date(b.dateCreated)) ? 1 : -1;
   });
@@ -268,6 +268,23 @@ app.post('/upload', async (req, res) => {
   return;
 });
 
+app.post('/transcription/like', checkAuthenticated, async (req, res) => {
+  const result = await TranscriptionManager.likeTranscription(req.body.transcriptionId, req.user.id);
+
+  res.json(result).status((result == null) ? 200 : 500);
+});
+
+
+app.post('/transcription/dislike', checkAuthenticated, async (req, res) => {
+  const result = await TranscriptionManager.dislikeTranscription(req.body.transcriptionId, req.user.id);
+
+  res.json(result).status((result == null) ? 200 : 500);
+});
+
+app.post('/transcription/comment', checkAuthenticated, (req, res) => {
+
+});
+
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
   next(createError(404));
@@ -289,7 +306,7 @@ function checkAuthenticated(req, res, next) {
     return next();
   }
 
-  res.redirect('login');
+  res.redirect('/login');
 }
 
 function checkNotAuthenticated(req, res, next) {
