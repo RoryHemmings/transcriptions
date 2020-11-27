@@ -45,6 +45,11 @@ embed {
   margin: 3% auto;
 }
 
+#transcription-content {
+  margin: auto;
+  display: block;
+}
+
 .flex-container {
   display: flex;
 }

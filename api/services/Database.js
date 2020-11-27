@@ -11,6 +11,17 @@ const db = new sql3.Database(process.env.DATABASE_PATH, (err) => {
   console.log('Connected to Database');
 });
 
+function isStringifiedJson(obj) {
+  let ret = true;
+  try {
+    JSON.parse(obj);
+  } catch(e) {
+    ret = false;
+  }
+
+  return ret;
+}
+
 const database = {
   insertUser: async (user) => {
     return new Promise((resolve, reject) => {
@@ -81,9 +92,25 @@ const database = {
   },
   updateTranscription: async (transcription) => {
     // Prevents from stringifying multiple times in a row
-    const likes = (transcription.likes == '[]') ? '[]' : JSON.stringify(transcription.likes);
-    const dislikes = (transcription.dislikes == '[]') ? '[]' : JSON.stringify(transcription.dislikes); 
-    const comments = (transcription.comments == '[]') ? '[]' : JSON.stringify(transcription.comments);
+    let likes = transcription.likes;
+    let dislikes = transcription.dislikes;
+    let comments = transcription.comments;
+
+    if (!isStringifiedJson(likes)) {
+      likes = JSON.stringify(likes)
+    }
+
+    if (!isStringifiedJson(dislikes)) {
+      dislikes = JSON.stringify(dislikes);
+    }
+
+    if (!isStringifiedJson(comments)) {
+      comments = JSON.stringify(comments);
+    }
+
+    // const likes = (transcription.likes == '[]') ? '[]' : JSON.stringify(JSON.parse(transcription.likes));
+    // const dislikes = (transcription.dislikes == '[]') ? '[]' : JSON.stringify(JSON.parse(transcription.dislikes)); 
+    // const comments = (transcription.comments == '[]') ? '[]' : JSON.stringify(JSON.parse(transcription.comments));
 
     return new Promise((resolve, reject) => {
       db.run('UPDATE transcriptions SET title = ?, likes = ?, dislikes = ?, comments = ? WHERE id = ?',
@@ -119,6 +146,18 @@ const database = {
       });
     });
   },
+  getRecentTranscriptions: async (num) => {
+    return new Promise((resolve, reject) => {
+      db.all('SELECT * FROM transcriptions ORDER BY dateCreated DESC LIMIT ?', [num], (err, res) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        }
+
+        resolve(res);
+      }) 
+    });
+  },
   close: () => {
     db.close((err) => {
       if (err) {
@@ -145,6 +184,8 @@ module.exports = database;
   SELECT * FROM people WHERE last_name="bob" ORDER BY age DESC;
   DELETE FROM people WHERE age=5;
   DROP TABLE table_name; to Delete table
+  SELECT * FROM Customers LIMIT 3;
+  Select top 3 id From @tbl Order By id Desc
 
   db.all returns all occurances
   db.get returns single occurance

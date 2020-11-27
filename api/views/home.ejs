@@ -5,10 +5,26 @@
 <body class="d-flex flex-column min-vh-100">
   <%- include('./partials/navbar') %>
   <main class="container">
-    <h1 class="text-center">
-      <%=title%>
-    </h1>
-    <p class="text-center">transcriptions</p>
+    <h1 class="text-center">Recent Transcriptions</h1>
+    <% recentTranscriptions.forEach(transcription => { %>
+    <div class="transcription flex-item flex-container" onclick="reroute('/transcription/<%=transcription.id%>')">
+      <div class="flex-item" id="transcription-info">
+        <h5 id="title"><%=transcription.title%></h5>
+        <!-- Fix problem with rerouting to user -->
+        <p id="author" class="text-muted" onclick="reroute('/user/')"><%=transcription.cbUsername%></p>
+        <p id="dateCreated" class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
+      </div>
+      <div class="flex-item" id="transcription-preview">
+        <!-- Test it out -->
+        <% if (transcription.mimetype == 'application/pdf') { %>
+        <img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/<%=transcription.filename%>" width="200"
+          height="258" />
+        <% } else { %>
+        <img src="/uploads/<%=transcription.filename%>" alt="preview" width="200" height="258" class="img-cover" />
+        <% } %>
+      </div>
+    </div>
+    <% }); %>
   </main>
 
   <footer class="mt-auto">

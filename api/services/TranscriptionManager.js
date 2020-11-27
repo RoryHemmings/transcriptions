@@ -8,6 +8,7 @@ const database = require("./Database");
 
 // File System
 const fs = require("fs");
+const { Database } = require("sqlite3");
 
 function checkValidTitle(title) {
 	// If title is undefined or has a length of more than 100 characters
@@ -183,6 +184,41 @@ const TranscriptionManager = {
 
 		// Update transcription in the database
 		updateTranscription(transcription);
+	},
+	createComment: async (transcriptionId, comment, username) => {
+		// Get transription by id
+		let transcription = await TranscriptionManager.findTranscriptionById(
+			transcriptionId
+		).catch((err) => {
+			console.error(err);
+			return err;
+		});
+
+		// Parse comments into object
+		transcription.comments = JSON.parse(transcription.comments);
+
+		// Create new comment object
+		const newComment = {
+			comment,
+			username,
+			dateCreated: new Date().toISOString(),
+		};
+
+		// Add comments to array
+		transcription.comments.push(newComment);
+
+		// Update transcription
+		updateTranscription(transcription);
+	},
+	getRecentTranscriptions: async (num) => {
+		let recentTranscriptions = await database
+			.getRecentTranscriptions(num)
+			.catch((err) => {
+				console.error(err);
+				recentTranscriptions = [];
+			});
+
+		return recentTranscriptions;
 	},
 };
 

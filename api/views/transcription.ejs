@@ -7,68 +7,87 @@
 
 <body class="d-flex flex-column min-vh-100">
   <%- include('./partials/navbar') %>
-  <main class="container col-md-6">
-    <h1 class="text-center">
-      Transcription
-    </h1>
-    <div class="row" id="transcription">
-      <h5><%=transcription.title%></h5>
-      <p class="text-muted">Author: <%=transcription.cbUsername%></p>
-      <p class="text-muted">Date Created: <%=new Date(transcription.dateCreated).toLocaleString()%></p>
-      <a href="/uploads/<%=transcription.filename%>" download>Download</a>
-      <% if (transcription.mimetype == 'image/png' || transcription.mimetype == 'image/jpeg') { %>
-      <img src="/uploads/<%=transcription.filename%>" alt="transcription" />
-      <% } else if (transcription.mimetype == 'application/pdf') { %>
-      <!-- <embed src="https://drive.google.com/viewerng/viewer?embedded=true&url=/static/uploads/<%=transcription.filename%>" 
+  <main>
+    <div id="transcription-content" class="container">
+      <div class="row" id="transcription">
+        <h1><%=transcription.title%></h1>
+        <p class="text-muted">Author: <%=transcription.cbUsername%></p>
+        <p class="text-muted">Date Created: <%=new Date(transcription.dateCreated).toLocaleString()%></p>
+        <a href="/uploads/<%=transcription.filename%>" download>Download</a>
+        <% if (transcription.mimetype == 'image/png' || transcription.mimetype == 'image/jpeg') { %>
+        <img src="/uploads/<%=transcription.filename%>" alt="transcription" />
+        <% } else if (transcription.mimetype == 'application/pdf') { %>
+        <!-- <embed src="https://drive.google.com/viewerng/viewer?embedded=true&url=/static/uploads/<%=transcription.filename%>" 
           width="1000" height="600"/> -->
-      <embed src="/uploads/<%=transcription.filename%>" width="1000" height="600" />
-      <% } else { %>
-      <p>This transcription file type does not support preview</p>
-      <% } %>
-    </div>
-    </div>
-    <div class="row" id="interactions">
-      <div class="container">
-        <div class="row" id="likes-dislikes">
-          <% const likes = JSON.parse(transcription.likes); %>
-          <% const dislikes = JSON.parse(transcription.dislikes); %>
+        <embed src="/uploads/<%=transcription.filename%>" width="1000" height="600" />
+        <% } else { %>
+        <p>This transcription file type does not support preview</p>
+        <% } %>
+      </div>
+      <div class="row" id="interactions">
+        <div class="container">
+          <div class="row" id="likes-dislikes">
+            <% const likes = JSON.parse(transcription.likes); %>
+            <% const dislikes = JSON.parse(transcription.dislikes); %>
 
-          <% if (user != undefined) { %>
+            <% if (user != undefined) { %>
 
-          <% if (!likes.includes(user.id)) { %>
-          <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()">Like</button>
-          <% } else { %>
-          <button name="like-button" id="like-button" class="btn btn-secondary" onclick="likePost()"
-            disabled>Like</button>
-          <% } %>
+            <% if (!likes.includes(user.id)) { %>
+            <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()">Like</button>
+            <% } else { %>
+            <button name="like-button" id="like-button" class="btn btn-secondary" onclick="likePost()"
+              disabled>Like</button>
+            <% } %>
 
-          <% if (!dislikes.includes(user.id)) { %>
-          <button name="dislike-button" id="dislike-button" class="btn btn-danger"
-            onclick="dislikePost()">Dislike</button>
-          <% } else { %>
-          <button name="dislike-button" id="dislike-button" class="btn btn-secondary" onclick="dislikePost()"
-            disabled>Dislike</button>
-          <% } %>
+            <% if (!dislikes.includes(user.id)) { %>
+            <button name="dislike-button" id="dislike-button" class="btn btn-danger"
+              onclick="dislikePost()">Dislike</button>
+            <% } else { %>
+            <button name="dislike-button" id="dislike-button" class="btn btn-secondary" onclick="dislikePost()"
+              disabled>Dislike</button>
+            <% } %>
 
-          <% } else {%>
-          <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()">Like</button>
-          <button name="dislike-button" id="dislike-button" class="btn btn-danger"
-            onclick="dislikePost()">Dislike</button>
-          <% } %>
+            <% } else {%>
+            <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()">Like</button>
+            <button name="dislike-button" id="dislike-button" class="btn btn-danger"
+              onclick="dislikePost()">Dislike</button>
+            <% } %>
 
-          <p class="text-justify" id="num-likes">Likes: <%=likes.length%></p>
-          <p class="text-justify" id="num-dislikes"><br>Dislikes: <%=dislikes.length%></p>
-        </div>
-        <div class="row" id="new-comment">
-          <div class="form-group">
-            <label for="comment-input">Comment</label>
-            <input type="text" class="form-control" name="comment-input" id="comment-input" aria-describedby="helpId"
-              placeholder="Comment" />
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <div class="container">
+              <div class="row">
+                <p class="text-justify" id="num-likes">Likes: <%=likes.length%></p>
+              </div>
+              <div class="row">
+                <p class="text-justify" id="num-dislikes">Dislikes: <%=dislikes.length%></p>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="row" id="comments">
-
+          <div class="row" id="new-comment">
+            <form id="comment-form" action="/transcription/comment" method="POST">
+              <div class="form-group">
+                <label for="comment-input">Comment</label>
+                <textarea type="text" rows="4" cols="50" class="form-control" name="comment-input" id="comment-input"
+                  aria-describedby="helpId" placeholder="Comment"></textarea>
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+            </form>
+          </div>
+          <div class="container" id="comments">
+            <div class="row">
+              <h2>Comments: </h2>
+            </div>
+            <% const comments = JSON.parse(transcription.comments); %>
+            <% for (let i = comments.length - 1; i > -1; i--) { %>
+            <div class="row">
+              <div class="comment">
+                <hr>
+                <p id="comment-username" class="text-justify font-weight-bold"><%=comments[i].username%></p>
+                <p id="comment-date" class="text-muted"><%=new Date(comments[i].dateCreated).toLocaleString()%></p>
+                <p id="comment-text" class="text-justify"><%=comments[i].comment%></p>
+              </div>
+            </div>
+            <% } %>
+          </div>
         </div>
       </div>
     </div>
@@ -131,10 +150,6 @@
       });
     }
 
-    function createComment() {
-
-    }
-
     function transcriptionHasBeenRated() {
       const liked = document.getElementById('like-button').disabled;
       const disliked = document.getElementById('dislike-button').disabled;
@@ -172,6 +187,36 @@
         dislikeButton.disabled = true;
         dislikeButton.setAttribute('class', 'btn btn-secondary');
       }
+    }
+
+    document.getElementById('comment-form').onsubmit = async (e) => {
+      e.preventDefault();
+
+      const comment = document.getElementById('comment-input').value;
+      const transcriptionId = '<%= transcription.id %>';
+
+      fetch('/transcription/comment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          commentInput: comment,
+          transcriptionId: transcriptionId
+        })
+      })
+        .then(async (res) => {
+          if (res.redirected) {
+            window.location.replace(res.url)
+          }
+
+          const data = await res.json();
+
+          // Finish status, display comments and error check for wack inputs in comments 
+          if (data.status == 201) {
+            window.location.reload();
+          }
+        });
     }
   </script>
 

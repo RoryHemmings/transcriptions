@@ -81,10 +81,14 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 // GET home page
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  let recentTranscriptions = [];
+  recentTranscriptions = await TranscriptionManager.getRecentTranscriptions(20);
+
   res.render('home', {
     title: `Welcome ${(req.user) ? req.user.username : ''}`,
-    user: req.user
+    user: req.user,
+    recentTranscriptions: recentTranscriptions
   });
 });
 
@@ -176,7 +180,7 @@ app.get('/transcription/:id', async (req, res) => {
   const id = req.params.id;
   const transcription = await TranscriptionManager.findTranscriptionById(id);
 
-  console.log(transcription);
+  // console.log(transcription);
 
   res.render('transcription', {
     user: req.user,
@@ -281,8 +285,11 @@ app.post('/transcription/dislike', checkAuthenticated, async (req, res) => {
   res.json(result).status((result == null) ? 200 : 500);
 });
 
-app.post('/transcription/comment', checkAuthenticated, (req, res) => {
+app.post('/transcription/comment', checkAuthenticated, async (req, res) => {
+  const result = await TranscriptionManager.createComment(req.body.transcriptionId, req.body.commentInput, req.user.username);
 
+  // res.json({redirected: false}).status((result == null) ? 201 : 500);
+  res.json({redirected: false, status: 201});
 });
 
 // catch 404 and forward to error handler
