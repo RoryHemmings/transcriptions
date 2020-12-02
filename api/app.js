@@ -99,9 +99,17 @@ app.get('/upload', checkAuthenticated, (req, res) => {
 });
 
 // GET serach page
-app.get('/search', (req, res) => {
+app.get('/search', async (req, res) => {
+  let term = req.query.term;
+  let results = [];
+
+  if (term && term.length > 0) {
+    results = await TranscriptionManager.search(term);
+  }
+
   res.render('search', {
-    user: req.user
+    user: req.user,
+    results
   });
 });
 
@@ -289,7 +297,10 @@ app.post('/transcription/comment', checkAuthenticated, async (req, res) => {
   const result = await TranscriptionManager.createComment(req.body.transcriptionId, req.body.commentInput, req.user.username);
 
   // res.json({redirected: false}).status((result == null) ? 201 : 500);
-  res.json({redirected: false, status: 201});
+  res.json({
+    redirected: false,
+    status: 201
+  });
 });
 
 // catch 404 and forward to error handler

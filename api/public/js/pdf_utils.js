@@ -29,7 +29,7 @@
              previews[i].src = canvas.toDataURL();
            });
          }).catch((err) => {
-           console.log(err)
+           console.log(err);
            // console.log(`Could not open page 1 of document ${path}`);
          });
        });

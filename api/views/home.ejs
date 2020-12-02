@@ -1,5 +1,8 @@
 <head>
   <%- include('./partials/head'); %>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"
+    integrity="sha512-Z8CqofpIcnJN80feS2uccz+pXWgZzeKxDsDNMD/dJ6997/LSRY+W4NmEt9acwR+Gt9OHN0kkI1CTianCwoqcjQ=="
+    crossorigin="anonymous"></script>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -13,9 +16,10 @@
         <!-- Fix problem with rerouting to user -->
         <p id="author" class="text-muted" onclick="reroute('/user/')"><%=transcription.cbUsername%></p>
         <p id="dateCreated" class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
+        <p id="numLikes" class="text-muted">👍 <%=JSON.parse(transcription.likes).length%> | 👎
+          <%=JSON.parse(transcription.dislikes).length%></p>
       </div>
       <div class="flex-item" id="transcription-preview">
-        <!-- Test it out -->
         <% if (transcription.mimetype == 'application/pdf') { %>
         <img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/<%=transcription.filename%>" width="200"
           height="258" />
@@ -30,5 +34,7 @@
   <footer class="mt-auto">
     <%- include('./partials/footer'); %>
   </footer>
+
+  <script src="/static/js/pdf_utils.js"></script>
 
 </body>

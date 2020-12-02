@@ -158,6 +158,19 @@ const database = {
       }) 
     });
   },
+  searchForTranscriptions: async (keywords) => {
+    return new Promise((resolve, reject) => {
+      // TODO UPDATE THIS ALGORITHM TO CHECK FOR EACH KEYWORD AND THEN CROSS REFERENCE TO SEE MOST RELEVANT
+      db.all('SELECT * FROM transcriptions WHERE title MATCH ?', [keywords[0]], (err, res) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        }
+
+        resolve(res);
+      })
+    });
+  },
   close: () => {
     db.close((err) => {
       if (err) {
@@ -195,6 +208,11 @@ module.exports = database;
 
   tags are stringified arrays since sqlite cant store arrays
   CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, cbUsername TEXT, dateCreated TEXT, tags TEXT, likes TEXT, dislikes TEXT, comments TEXT);
+  CREATE VIRTUAL TABLE transcriptions USING FTS5(id, title, encoding, mimetype, size, filename, cbUsername, dateCreated, tags, likes, dislikes, comments);
+
+  Not case sensitive, change column name or just use table name if you want to search the entire thing
+  SELECT * FROM transcriptions WHERE transcriptions MATCH 'query';
+  SELECT * FROM transcriptions WHERE title MATCH 'query' or tags MATCH 'query';
 
   751f4448-d7bd-4fc9-a2eb-15eef9bfb84d
 */

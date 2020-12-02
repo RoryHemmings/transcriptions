@@ -6,10 +6,6 @@
 const { v4: uuidv4 } = require("uuid");
 const database = require("./Database");
 
-// File System
-const fs = require("fs");
-const { Database } = require("sqlite3");
-
 function checkValidTitle(title) {
 	// If title is undefined or has a length of more than 100 characters
 	if (!title || title.length > 100 || title.length < 1) {
@@ -209,6 +205,18 @@ const TranscriptionManager = {
 
 		// Update transcription
 		updateTranscription(transcription);
+	},
+	search: async (term) => {
+		const keywords = term.split(' ');
+
+		let results = await database
+			.searchForTranscriptions(keywords)
+			.catch((err) => {
+				console.error(err);
+				results = [];
+			});
+
+		return results;
 	},
 	getRecentTranscriptions: async (num) => {
 		let recentTranscriptions = await database

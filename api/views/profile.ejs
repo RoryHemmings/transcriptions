@@ -32,13 +32,16 @@
             <h5 id="title"><%=transcription.title%></h5>
             <p class="text-muted"><%=transcription.cbUsername%></p>
             <p class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
+            <p id="numLikes" class="text-muted">👍 <%=JSON.parse(transcription.likes).length%> | 👎
+              <%=JSON.parse(transcription.dislikes).length%></p>
           </div>
           <div class="flex-item" id="transcription-preview">
             <!-- Test it out -->
             <% if (transcription.mimetype == 'application/pdf') { %>
-              <img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/<%=transcription.filename%>" width="200" height="258" />
+            <img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/<%=transcription.filename%>"
+              width="200" height="258" />
             <% } else { %>
-              <img src="/uploads/<%=transcription.filename%>" alt="preview" width="200" height="258" class="img-cover" />
+            <img src="/uploads/<%=transcription.filename%>" alt="preview" width="200" height="258" class="img-cover" />
             <% } %>
           </div>
         </div>
