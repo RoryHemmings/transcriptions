@@ -103,12 +103,15 @@ app.get('/search', async (req, res) => {
   let term = req.query.term;
   let results = [];
 
+  let pageNumber = req.query.pageNumber || 1;
+
   if (term && term.length > 0) {
-    results = await TranscriptionManager.search(term);
+    results = await TranscriptionManager.search(term, pageNumber);
   }
 
   res.render('search', {
     user: req.user,
+    pageNumber: pageNumber,
     results
   });
 });

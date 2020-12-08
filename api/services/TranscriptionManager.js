@@ -206,17 +206,62 @@ const TranscriptionManager = {
 		// Update transcription
 		updateTranscription(transcription);
 	},
-	search: async (term) => {
+	search: async (term, pageNumber) => {
+		let resultMap = new Map();
 		const keywords = term.split(' ');
 
-		let results = await database
-			.searchForTranscriptions(keywords)
+		/**
+		 * Search Algorithm Outline
+		 * 0. Create result map
+		 * 1. Split search term into keywords
+		 * 2. Search database for terms one at a time (get results as just the ID)
+		 * 3. Iterate through the results
+		 * 	3-1. Increment the result map by 1 at key of each result ID
+		 * 4. Create array that is sorted based on ids with the highest number of times seen first
+		 * 5. Search database for top 20 results or something
+		 * 	5-1. Change result page number based on page number sent in request 
+		 */
+
+		 for (let keyword of keywords) {
+			let searchResults = await database
+			// Search for individual keywords
+			.searchForTranscriptions(keyword)
 			.catch((err) => {
 				console.error(err);
-				results = [];
-			});
+			});	
 
-		return results;
+			for (let result of searchResults) {
+				// Get id out of result obect
+				result = result.id;
+				let popularity = resultMap.get(result);
+				popularity = popularity + 1 || 1;		// Will set initial popularity if result doesnt exist yet  
+				resultMap.set(result, popularity);
+			}
+		}
+
+		// Sort map into array with an order determined by descending values
+		let results = [...resultMap].sort((a, b) => {
+			// For some reason comparing with > operator doesn't work
+			// Instead you are supposed to subtract them
+			// I understand why but it makes very little sense for javascript to break convention for no reason
+			return b[1] - a[1];
+		});
+
+		// filters so that transcriptions are ordered based on page number
+		let maxTranscriptionsPerPage = 20; 
+		results = results.slice((pageNumber - 1) * maxTranscriptionsPerPage, pageNumber * maxTranscriptionsPerPage);
+
+		// Returns to 20 results
+		let ret = [];
+		for (let result of results) {
+			let transcription = await database.findTranscriptionById(result[0]).catch(err => {
+				console.error(err);
+			});		
+
+			ret.push(transcription);
+		}
+
+		return ret;
 	},
 	getRecentTranscriptions: async (num) => {
 		let recentTranscriptions = await database

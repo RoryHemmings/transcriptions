@@ -45,10 +45,44 @@
       <% }) %>
       <% } %>
     </div>
+    <div class="flex-container" id="navigation">
+      <% if (results.length > 0) { %>
+      <div class="flex-item">
+        <% if (pageNumber > 1) { %>
+        <button class="btn btn-primary" onclick="changePage(-1)">Previous Page</button>
+        <% } else { %>
+        <button class="btn btn-primary" onclick="changePage(-1)" disabled>Previous Page</button>
+        <% } %>
+      </div>
+
+      <div class="flex-item">
+        <p><%=pageNumber%></p>
+      </div>
+
+      <div class="flex-item">
+        <% if (results.length >= 20) { %>
+        <button class="btn btn-primary" onclick="changePage(1)">Next Page</button>
+        <% } else { %>
+        <button class="btn btn-primary" onclick="changePage(1)" disabled>Next Page</button>
+        <% } %>
+      </div>
+
+      <% } %>
+    </div>
   </main>
 
   <footer class="mt-auto">
     <%- include('./partials/footer'); %>
   </footer>
+
+  <script>
+
+    function changePage(increment) {
+      const url = updateURLParameter(window.location.href, 'pageNumber', Number('<%=pageNumber%>') + increment);
+
+      reroute(url);
+    }
+
+  </script>
 
 </body>

@@ -158,10 +158,12 @@ const database = {
       }) 
     });
   },
-  searchForTranscriptions: async (keywords) => {
+  /** 
+    * Returns only ids NOT whole object
+  */
+  searchForTranscriptions: async (keyword) => {
     return new Promise((resolve, reject) => {
-      // TODO UPDATE THIS ALGORITHM TO CHECK FOR EACH KEYWORD AND THEN CROSS REFERENCE TO SEE MOST RELEVANT
-      db.all('SELECT * FROM transcriptions WHERE title MATCH ?', [keywords[0]], (err, res) => {
+      db.all('SELECT id FROM transcriptions WHERE title MATCH ?', [keyword], (err, res) => {
         if (err) {
           console.error(err);
           reject(err);
