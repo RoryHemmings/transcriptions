@@ -6,6 +6,8 @@
 const { v4: uuidv4 } = require("uuid");
 const database = require("./Database");
 
+const fs = require('fs');
+
 function checkValidTitle(title) {
 	// If title is undefined or has a length of more than 100 characters
 	if (!title || title.length > 100 || title.length < 1) {
@@ -62,16 +64,14 @@ async function saveToDB(transcription) {
 }
 
 async function updateTranscription(transcription) {
-	let res = null;
-	await database.updateTranscription(transcription).catch((err) => {
+	 return await database.updateTranscription(transcription).catch((err) => {
+		console.error(err);
 		res = err;
 	});
-
-	return res;
 }
 
 const TranscriptionManager = {
-	createTranscription: async (title, fileInfo, cbUsername, tags) => {
+	createTranscription: async (title, fileInfo, author, tags) => {
 		const titleError = checkValidTitle(title);
 		const fileInfoError = checkValidFileInfo(fileInfo);
 		if (titleError) {
@@ -85,12 +85,27 @@ const TranscriptionManager = {
 		const id = uuidv4();
 		const dateCreated = new Date().toISOString();
 
+		tags = tags.split(",");
+		for (let i = 0; i < tags.length; i++) {
+			if (tags[i][0] == " ") {
+				tags[i] = tags[i].substring(1);
+			}
+			if (tags[i][tags[i].length - 1] == " ") {
+				tags[i] = tags[i].substring(0, tags[i].length - 1);
+			}
+		}
+
+		if (tags.length == 1 && tags[0] == '') {
+			tags = [];
+		}
+
 		const transcription = {
 			id,
 			title,
-			cbUsername,
 			dateCreated,
 			tags,
+			author: author.username,
+			authorId: author.id,
 			likes: [], // Will be stored as an array of user_ids
 			dislikes: [],
 			comments: [],
@@ -208,7 +223,7 @@ const TranscriptionManager = {
 	},
 	search: async (term, pageNumber) => {
 		let resultMap = new Map();
-		const keywords = term.split(' ');
+		const keywords = term.split(" ");
 
 		/**
 		 * Search Algorithm Outline
@@ -219,22 +234,22 @@ const TranscriptionManager = {
 		 * 	3-1. Increment the result map by 1 at key of each result ID
 		 * 4. Create array that is sorted based on ids with the highest number of times seen first
 		 * 5. Search database for top 20 results or something
-		 * 	5-1. Change result page number based on page number sent in request 
+		 * 	5-1. Change result page number based on page number sent in request
 		 */
 
-		 for (let keyword of keywords) {
+		for (let keyword of keywords) {
 			let searchResults = await database
-			// Search for individual keywords
-			.searchForTranscriptions(keyword)
-			.catch((err) => {
-				console.error(err);
-			});	
+				// Search for individual keywords
+				.searchForTranscriptions(keyword)
+				.catch((err) => {
+					console.error(err);
+				});
 
 			for (let result of searchResults) {
 				// Get id out of result obect
 				result = result.id;
 				let popularity = resultMap.get(result);
-				popularity = popularity + 1 || 1;		// Will set initial popularity if result doesnt exist yet  
+				popularity = popularity + 1 || 1; // Will set initial popularity if result doesnt exist yet
 				resultMap.set(result, popularity);
 			}
 		}
@@ -248,15 +263,20 @@ const TranscriptionManager = {
 		});
 
 		// filters so that transcriptions are ordered based on page number
-		let maxTranscriptionsPerPage = 20; 
-		results = results.slice((pageNumber - 1) * maxTranscriptionsPerPage, pageNumber * maxTranscriptionsPerPage);
+		let maxTranscriptionsPerPage = 20;
+		results = results.slice(
+			(pageNumber - 1) * maxTranscriptionsPerPage,
+			pageNumber * maxTranscriptionsPerPage
+		);
 
 		// Returns to 20 results
 		let ret = [];
 		for (let result of results) {
-			let transcription = await database.findTranscriptionById(result[0]).catch(err => {
-				console.error(err);
-			});		
+			let transcription = await database
+				.findTranscriptionById(result[0])
+				.catch((err) => {
+					console.error(err);
+				});
 
 			ret.push(transcription);
 		}
@@ -273,15 +293,34 @@ const TranscriptionManager = {
 
 		return recentTranscriptions;
 	},
+	deleteTranscription: async (transcription) => {
+		let path = __dirname + '/../../uploads/' + transcription.filename; 
+
+		/** 
+			* I debated adding a file manager, but it 
+			* would literally only serve one purpose so
+			* I decided against it
+			*/
+		fs.unlink(path, (err) => {
+			if (err) {
+				console.error("Couldn't delete file: " + err);
+			}
+		});
+
+		return await database.deleteTranscription(transcription.id).catch((err) => {
+			console.error(err);
+			return err;
+		});
+	}
 };
 
 module.exports = TranscriptionManager;
 
 // class Transcription {
-//   constructor(id, title, encoding, mimetype, size, filename, cbUsername, dateCreated, tags) {
+//   constructor(id, title, encoding, mimetype, size, filename, author, dateCreated, tags) {
 //     this._id = id;
 //     this._title = title;
-//     this._cbUsername = cbUsername;
+//     this._author = author;
 //     this._dateCreated = dateCreated;
 //     this._tags = tags;
 
@@ -326,8 +365,8 @@ module.exports = TranscriptionManager;
 //     return this._filename;
 //   }
 
-//   get cbUsername() {
-//     return this._cbUsername;
+//   get author() {
+//     return this._author;
 //   }
 
 //   get dateCreated() {
@@ -339,6 +378,6 @@ module.exports = TranscriptionManager;
 //   }
 
 //   toString() {
-//     return `(${this._id}, ${this._title}, ${this._encoding}, ${this._mimetype}, ${this._size}, ${this._filename}, ${this._cbUsername}, ${this._dateCreated}, [${this._tags}])`;
+//     return `(${this._id}, ${this._title}, ${this._encoding}, ${this._mimetype}, ${this._size}, ${this._filename}, ${this._author}, ${this._dateCreated}, [${this._tags}])`;
 //   }
 // }

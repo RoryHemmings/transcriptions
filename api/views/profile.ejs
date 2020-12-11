@@ -30,8 +30,14 @@
         <div class="transcription flex-item flex-container" onclick="reroute('/transcription/<%=transcription.id%>')">
           <div class="flex-item" id="transcription-info">
             <h5 id="title"><%=transcription.title%></h5>
-            <p class="text-muted"><%=transcription.cbUsername%></p>
+            <a id="author" href="/user/<%=transcription.authorId%>"><%=transcription.author%></a>
             <p class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
+
+            <% let tags = JSON.parse(transcription.tags); %>
+            <% for (let i = 0; i < ((tags.length < 4) ? tags.length : 4); i++) { %>
+            <p class="tag-nohover"><%=tags[i]%></p>
+            <% } %>
+
             <p id="numLikes" class="text-muted">👍 <%=JSON.parse(transcription.likes).length%> | 👎
               <%=JSON.parse(transcription.dislikes).length%></p>
           </div>

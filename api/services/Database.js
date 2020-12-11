@@ -15,7 +15,7 @@ function isStringifiedJson(obj) {
   let ret = true;
   try {
     JSON.parse(obj);
-  } catch(e) {
+  } catch (e) {
     ret = false;
   }
 
@@ -70,11 +70,12 @@ const database = {
   },
   insertTranscription: async (transcription) => {
     return new Promise((resolve, reject) => {
-      db.run('INSERT INTO transcriptions (id, title, encoding, mimetype, size, filename, cbUsername, dateCreated, tags, likes, dislikes, comments) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      db.run('INSERT INTO transcriptions (id, title, encoding, mimetype, size, filename, author, authorID, dateCreated, tags, likes, dislikes, comments) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [transcription.id, transcription.title,
           transcription.encoding, transcription.mimetype,
           transcription.size, transcription.filename,
-          transcription.cbUsername,
+          transcription.author,
+          transcription.authorId,
           transcription.dateCreated,
           JSON.stringify(transcription.tags),
           JSON.stringify(transcription.likes),
@@ -137,7 +138,7 @@ const database = {
   },
   findTranscriptionsByUsername: async (username) => {
     return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM transcriptions WHERE cbUsername = ?', [username], (err, res) => {
+      db.all('SELECT * FROM transcriptions WHERE author = ?', [username], (err, res) => {
         if (err) {
           reject(err);
         }
@@ -155,15 +156,16 @@ const database = {
         }
 
         resolve(res);
-      }) 
+      })
     });
   },
   /** 
-    * Returns only ids NOT whole object
-  */
+   * Returns only ids NOT whole object
+   */
   searchForTranscriptions: async (keyword) => {
+    // TODO create tag search so that 
     return new Promise((resolve, reject) => {
-      db.all('SELECT id FROM transcriptions WHERE title MATCH ?', [keyword], (err, res) => {
+      db.all("SELECT * FROM transcriptions WHERE transcriptions MATCH ?", [keyword], (err, res) => {
         if (err) {
           console.error(err);
           reject(err);
@@ -171,6 +173,20 @@ const database = {
 
         resolve(res);
       })
+    });
+  },
+  // Return value of undefined means transcription was deleted successfully
+  // Return value of anything else means there was an error
+  deleteTranscription: async (transcriptionId) => {
+    return new Promise((resolve, reject) => {
+      db.run('DELETE FROM transcriptions WHERE id = ?', [transcriptionId], (err, res) => {
+        if (err) {
+          console.error(error);
+          reject(err);
+        }
+
+        resolve(res);
+      });
     });
   },
   close: () => {
@@ -209,12 +225,13 @@ module.exports = database;
   db.run can be used to insert data or any other command (calls callback)
 
   tags are stringified arrays since sqlite cant store arrays
-  CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, cbUsername TEXT, dateCreated TEXT, tags TEXT, likes TEXT, dislikes TEXT, comments TEXT);
-  CREATE VIRTUAL TABLE transcriptions USING FTS5(id, title, encoding, mimetype, size, filename, cbUsername, dateCreated, tags, likes, dislikes, comments);
+  CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, author TEXT, dateCreated TEXT, tags TEXT, likes TEXT, dislikes TEXT, comments TEXT);
+  CREATE VIRTUAL TABLE transcriptions USING FTS5(id, title, encoding, mimetype, size, filename, author, authorId, dateCreated, tags, likes, dislikes, comments);
 
   Not case sensitive, change column name or just use table name if you want to search the entire thing
   SELECT * FROM transcriptions WHERE transcriptions MATCH 'query';
   SELECT * FROM transcriptions WHERE title MATCH 'query' or tags MATCH 'query';
+  SELECT * FROM transcriptions WHERE transcriptions MATCH 'title:? OR tags:?'; 
 
   751f4448-d7bd-4fc9-a2eb-15eef9bfb84d
 */

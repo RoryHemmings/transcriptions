@@ -9,20 +9,42 @@
   <%- include('./partials/navbar') %>
   <main>
     <div id="transcription-content" class="container">
-      <div class="row" id="transcription">
-        <h1><%=transcription.title%></h1>
-        <p class="text-muted">Author: <%=transcription.cbUsername%></p>
-        <p class="text-muted">Date Created: <%=new Date(transcription.dateCreated).toLocaleString()%></p>
-        <a href="/uploads/<%=transcription.filename%>" download>Download</a>
-        <% if (transcription.mimetype == 'image/png' || transcription.mimetype == 'image/jpeg') { %>
-        <img src="/uploads/<%=transcription.filename%>" alt="transcription" />
-        <% } else if (transcription.mimetype == 'application/pdf') { %>
-        <!-- <embed src="https://drive.google.com/viewerng/viewer?embedded=true&url=/static/uploads/<%=transcription.filename%>" 
+      <div id="transcription">
+        <div class="row">
+          <h1><%=transcription.title%></h1>
+        </div>
+        <div class="row">
+          <a id="author" href="/user/<%=transcription.authorId%>"><%=transcription.author%></a>
+          <% if (authenticated) { %>
+            <button type="button" class="btn btn-primary" onclick="deleteTranscription()">Delete</button>
+          <% } %>
+        </div>
+        <div class="row">
+          <p class="text-muted">Date Created: <%=new Date(transcription.dateCreated).toLocaleString()%></p>
+        </div>
+
+        <div class="row">
+          <% let tags = JSON.parse(transcription.tags); %>
+          <% for (let i = 0; i < ((tags.length < 4) ? tags.length : 4); i++) { %>
+          <p class="tag" onclick="reroute('/search/?term=<%=tags[i]%>')"><%=tags[i]%></p>
+          <% } %>
+        </div>
+        <div class="row">
+          <p class="text-muted">Click on tags to see other transcriptions with them</p>
+        </div>
+
+        <div class="row">
+          <a href="/uploads/<%=transcription.filename%>" download>Download</a>
+          <% if (transcription.mimetype == 'image/png' || transcription.mimetype == 'image/jpeg') { %>
+          <img src="/uploads/<%=transcription.filename%>" alt="transcription" />
+          <% } else if (transcription.mimetype == 'application/pdf') { %>
+          <!-- <embed src="https://drive.google.com/viewerng/viewer?embedded=true&url=/static/uploads/<%=transcription.filename%>" 
           width="1000" height="600"/> -->
-        <embed src="/uploads/<%=transcription.filename%>" width="1000" height="600" />
-        <% } else { %>
-        <p>This transcription file type does not support preview</p>
-        <% } %>
+          <embed src="/uploads/<%=transcription.filename%>" width="1000" height="600" />
+          <% } else { %>
+          <p>This transcription file type does not support preview</p>
+          <% } %>
+        </div>
       </div>
       <div class="row" id="interactions">
         <div class="container">
@@ -187,6 +209,34 @@
         dislikeButton.disabled = true;
         dislikeButton.setAttribute('class', 'btn btn-secondary');
       }
+    }
+
+    function deleteTranscription() {
+      let choice = confirm("Do you really want to delete this transcription and all interatctions associated with it. This is non-reversable.");
+      if (!choice) {
+        return;
+      }
+
+      fetch('/transcription/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          transcriptionId: '<%=transcription.id%>',
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 500 || res.status === 401) {
+          alert('Something went wrong. Error code: ' + res.status);
+        }
+
+        if (res.status == 200 && res.success) {
+          console.log("Transcription Deleted")
+          reroute('/');
+        }
+      });
     }
 
     document.getElementById('comment-form').onsubmit = async (e) => {

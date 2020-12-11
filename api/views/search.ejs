@@ -25,21 +25,29 @@
       <h3 class="info">No Results</h3>
       <% } else { %>
       <% results.forEach(transcription => { %>
-      <div class="transcription flex-item flex-container" onclick="reroute('/transcription/<%=transcription.id%>')">
-        <div class="flex-item" id="transcription-info">
-          <h5 id="title"><%=transcription.title%></h5>
-          <p id="author" class="text-muted" onclick="reroute('/user/')"><%=transcription.cbUsername%></p>
-          <p id="dateCreated" class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
-          <p id="numLikes" class="text-muted">👍 <%=JSON.parse(transcription.likes).length%> | 👎
-            <%=JSON.parse(transcription.dislikes).length%></p>
-        </div>
-        <div class="flex-item" id="transcription-preview">
-          <% if (transcription.mimetype == 'application/pdf') { %>
-          <img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/<%=transcription.filename%>"
-            width="200" height="258" />
-          <% } else { %>
-          <img src="/uploads/<%=transcription.filename%>" alt="preview" width="200" height="258" class="img-cover" />
-          <% } %>
+      <div class="row">
+        <div class="transcription flex-item flex-container" onclick="reroute('/transcription/<%=transcription.id%>')">
+          <div class="flex-item" id="transcription-info">
+            <h5 id="title"><%=transcription.title%></h5>
+            <a id="author" href="/user/<%=transcription.authorId%>"><%=transcription.author%></a>
+            <p id="dateCreated" class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
+
+            <% let tags = JSON.parse(transcription.tags); %>
+            <% for (let i = 0; i < ((tags.length < 4) ? tags.length : 4); i++) { %>
+            <p class="tag-nohover"><%=tags[i]%></p>
+            <% } %>
+
+            <p id="numLikes" class="text-muted">👍 <%=JSON.parse(transcription.likes).length%> | 👎
+              <%=JSON.parse(transcription.dislikes).length%></p>
+          </div>
+          <div class="flex-item" id="transcription-preview">
+            <% if (transcription.mimetype == 'application/pdf') { %>
+            <img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/<%=transcription.filename%>"
+              width="200" height="258" />
+            <% } else { %>
+            <img src="/uploads/<%=transcription.filename%>" alt="preview" width="200" height="258" class="img-cover" />
+            <% } %>
+          </div>
         </div>
       </div>
       <% }) %>
