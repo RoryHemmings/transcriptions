@@ -86,13 +86,11 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // Routes
 // GET home page
 app.get("/", async (req, res) => {
-	let recentTranscriptions = [];
-	recentTranscriptions = await TranscriptionManager.getRecentTranscriptions(20);
+	// recentTranscriptions = await TranscriptionManager.getRecentTranscriptions(20);
 
 	res.render("home", {
 		title: `Welcome ${req.user ? req.user.username : ""}`,
 		user: req.user,
-		recentTranscriptions: recentTranscriptions,
 	});
 });
 
@@ -101,6 +99,22 @@ app.get("/upload", checkAuthenticated, (req, res) => {
 		user: req.user,
 	});
 });
+// app.get("/", async (req, res) => {
+// 	let recentTranscriptions = [];
+// 	recentTranscriptions = await TranscriptionManager.getRecentTranscriptions(20);
+
+// 	res.render("home", {
+// 		title: `Welcome ${req.user ? req.user.username : ""}`,
+// 		user: req.user,
+// 		recentTranscriptions: recentTranscriptions,
+// 	});
+// });
+
+// app.get("/upload", checkAuthenticated, (req, res) => {
+// 	res.render("upload", {
+// 		user: req.user,
+// 	});
+// });
 
 // GET serach page
 app.get("/search", async (req, res) => {
@@ -212,6 +226,19 @@ app.get("/transcription/:id", async (req, res) => {
 		authenticated,
 	});
 });
+
+/** 
+ * Returns recent transcriptions in json form
+ */
+app.get("/recentTranscriptions", async (req, res) => {
+	const transcriptions = await TranscriptionManager.getRecentTranscriptions(Number(req.query.pageNumber));
+
+	res.json({
+		transcriptions,
+		status: 200,
+		success: true
+	});
+})
 
 app.get("/settings", checkAuthenticated, (req, res) => {
 	res.render("userSettings", {
@@ -336,7 +363,8 @@ app.post("/transcription/comment", checkAuthenticated, async (req, res) => {
 	const result = await TranscriptionManager.createComment(
 		req.body.transcriptionId,
 		req.body.commentInput,
-		req.user.username
+		req.user.username,
+		req.user.id
 	);
 
 	// res.json({redirected: false}).status((result == null) ? 201 : 500);
@@ -365,16 +393,14 @@ app.delete("/transcription/delete", checkAuthenticated, async (req, res) => {
 		});
 	}
 
-	const error = await TranscriptionManager.deleteTranscription(
-		transcription
-  );
+	const error = await TranscriptionManager.deleteTranscription(transcription);
 
 	if (error) {
-    res.json({
-    // Return internal server error code
-    status: 500,
-    success: false
-  });
+		res.json({
+			// Return internal server error code
+			status: 500,
+			success: false,
+		});
 	} else {
 		res.json({
 			// Return success code
@@ -383,6 +409,45 @@ app.delete("/transcription/delete", checkAuthenticated, async (req, res) => {
 		});
 	}
 });
+
+app.delete(
+	"/transcription/deleteComment",
+	checkAuthenticated,
+	async (req, res) => {
+		let transcription = await TranscriptionManager.findTranscriptionById(
+			req.body.transcriptionId
+		);
+
+		// Check that request wasn't just made by an authenticated user of a different user id
+		// I wouldn't be surprised if there was a way around this but there shouldn't be, atleast to my knowledge
+		if (
+			req.user.id !=
+			JSON.parse(transcription.comments)[req.body.commentIndex].userId
+		) {
+			res.json({
+				status: 401,
+				success: false,
+			});
+		}
+
+		const error = await TranscriptionManager.deleteComment(
+			transcription,
+			req.body.commentIndex
+		);
+
+		if (error) {
+			res.json({
+				status: 500,
+				success: false,
+			});
+		} else {
+			res.json({
+				status: 200,
+				success: true
+			})
+		}
+	}
+);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

@@ -147,9 +147,9 @@ const database = {
       });
     });
   },
-  getRecentTranscriptions: async (num) => {
+  getRecentTranscriptions: async (begin, end) => {
     return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM transcriptions ORDER BY dateCreated DESC LIMIT ?', [num], (err, res) => {
+      db.all('SELECT * FROM transcriptions ORDER BY dateCreated DESC LIMIT ? OFFSET ?', [end, begin], (err, res) => {
         if (err) {
           console.error(err);
           reject(err);
@@ -232,6 +232,8 @@ module.exports = database;
   SELECT * FROM transcriptions WHERE transcriptions MATCH 'query';
   SELECT * FROM transcriptions WHERE title MATCH 'query' or tags MATCH 'query';
   SELECT * FROM transcriptions WHERE transcriptions MATCH 'title:? OR tags:?'; 
+
+  LIMIT 10 OFFSET 10 (gets 10 rows starting from the 11th row)
 
   751f4448-d7bd-4fc9-a2eb-15eef9bfb84d
 */

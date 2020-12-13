@@ -6,7 +6,7 @@
 const { v4: uuidv4 } = require("uuid");
 const database = require("./Database");
 
-const fs = require('fs');
+const fs = require("fs");
 
 function checkValidTitle(title) {
 	// If title is undefined or has a length of more than 100 characters
@@ -64,7 +64,7 @@ async function saveToDB(transcription) {
 }
 
 async function updateTranscription(transcription) {
-	 return await database.updateTranscription(transcription).catch((err) => {
+	return await database.updateTranscription(transcription).catch((err) => {
 		console.error(err);
 		res = err;
 	});
@@ -95,7 +95,7 @@ const TranscriptionManager = {
 			}
 		}
 
-		if (tags.length == 1 && tags[0] == '') {
+		if (tags.length == 1 && tags[0] == "") {
 			tags = [];
 		}
 
@@ -196,7 +196,7 @@ const TranscriptionManager = {
 		// Update transcription in the database
 		updateTranscription(transcription);
 	},
-	createComment: async (transcriptionId, comment, username) => {
+	createComment: async (transcriptionId, comment, username, userId) => {
 		// Get transription by id
 		let transcription = await TranscriptionManager.findTranscriptionById(
 			transcriptionId
@@ -212,6 +212,7 @@ const TranscriptionManager = {
 		const newComment = {
 			comment,
 			username,
+			userId,
 			dateCreated: new Date().toISOString(),
 		};
 
@@ -283,24 +284,28 @@ const TranscriptionManager = {
 
 		return ret;
 	},
-	getRecentTranscriptions: async (num) => {
+	getRecentTranscriptions: async (pageNumber) => {
+		const numTranscriptionsPerPage = 3;	
+		let begin = (pageNumber - 1) * numTranscriptionsPerPage;	
+		let end = (begin + numTranscriptionsPerPage);
+
 		let recentTranscriptions = await database
-			.getRecentTranscriptions(num)
+			.getRecentTranscriptions(begin, end)
 			.catch((err) => {
 				console.error(err);
 				recentTranscriptions = [];
 			});
-
+		
 		return recentTranscriptions;
 	},
 	deleteTranscription: async (transcription) => {
-		let path = __dirname + '/../../uploads/' + transcription.filename; 
+		let path = __dirname + "/../../uploads/" + transcription.filename;
 
-		/** 
-			* I debated adding a file manager, but it 
-			* would literally only serve one purpose so
-			* I decided against it
-			*/
+		/**
+		 * I debated adding a file manager, but it
+		 * would literally only serve one purpose so
+		 * I decided against it
+		 */
 		fs.unlink(path, (err) => {
 			if (err) {
 				console.error("Couldn't delete file: " + err);
@@ -311,7 +316,20 @@ const TranscriptionManager = {
 			console.error(err);
 			return err;
 		});
-	}
+	},
+	deleteComment: async (transcription, commentIndex) => {
+		let comments = JSON.parse(transcription.comments);
+
+		comments.splice(commentIndex, 1);
+
+		/**
+		 * No need to stringify the comment array before setting it
+		 * because database.updateTranscription handles that
+		 */
+		transcription.comments = comments;
+
+		return await updateTranscription(transcription);
+	},
 };
 
 module.exports = TranscriptionManager;
