@@ -163,9 +163,8 @@ const database = {
    * Returns only ids NOT whole object
    */
   searchForTranscriptions: async (keyword) => {
-    // TODO create tag search so that 
     return new Promise((resolve, reject) => {
-      db.all("SELECT * FROM transcriptions WHERE transcriptions MATCH ?", [keyword], (err, res) => {
+      db.all("SELECT * FROM transcriptions WHERE transcriptions MATCH ? ORDER BY dateCreated DESC", [keyword], (err, res) => {
         if (err) {
           console.error(err);
           reject(err);
@@ -173,6 +172,20 @@ const database = {
 
         resolve(res);
       })
+    });
+  },
+  searchForTranscriptionsByTag: (tag) => {
+    // Change tag so that it searches specifically for the version in quotes since tags are stored between quotes
+    tag = `"${tag}"`;
+    return new Promise((resolve, reject) => {
+      db.all("SELECT * FROM transcriptions WHERE tags MATCH ? ORDER BY dateCreated DESC", [tag], (err, res) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        }
+
+        resolve(res);
+      });
     });
   },
   // Return value of undefined means transcription was deleted successfully

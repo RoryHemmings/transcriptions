@@ -3,6 +3,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"
     integrity="sha512-Z8CqofpIcnJN80feS2uccz+pXWgZzeKxDsDNMD/dJ6997/LSRY+W4NmEt9acwR+Gt9OHN0kkI1CTianCwoqcjQ=="
     crossorigin="anonymous"></script>
+    <style>
+      html {
+        height: 101%;
+      }
+    </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -37,44 +42,52 @@
             pageNumber += 1;
 
             res.transcriptions.forEach((transcription) => {
-              let temp = "";
-              temp += `<div class="transcription flex-item flex-container" onclick="reroute('/transcription/${transcription.id}')">`;
-              temp += `<div class="flex-item" id="transcription-info">`;
-              temp += `<h5 id="title">${transcription.title}</h5>`;
-              temp += `<a id="author" href="/user/${transcription.authorId}">${transcription.author}</a>`;
-              temp += `<p id="dateCreated" class="text-muted">${new Date(transcription.dateCreated).toLocaleDateString()}</p>`;
-              temp += `<p id="numLikes" class="text-muted">👍 ${JSON.parse(transcription.likes).length} | 👎 ${JSON.parse(transcription.dislikes).length}</p>`;
+              let numLikes = JSON.parse(transcription.likes).length;
+              let numDislikes = JSON.parse(transcription.dislikes).length;
+              if (((numLikes - numDislikes) + 1) >= 0) {
+                let temp = "";
+                temp += `<div class="transcription flex-item flex-container" onclick="reroute('/transcription/${transcription.id}')">`;
+                temp += `<div class="flex-item" id="transcription-info">`;
+                temp += `<h5 id="title">${transcription.title}</h5>`;
+                temp += `<a id="author" href="/user/${transcription.authorId}">${transcription.author}</a>`;
+                temp += `<p id="dateCreated" class="text-muted">${new Date(transcription.dateCreated).toLocaleDateString()}</p>`;
+                temp += `<p id="numLikes" class="text-muted">👍 ${JSON.parse(transcription.likes).length} | 👎 ${JSON.parse(transcription.dislikes).length}</p>`;
 
-              let tags = JSON.parse(transcription.tags);
-              for (let i = 0; i < ((tags.length < 4) ? tags.length : 4); i++) {
-                temp += `<p class="tag-nohover">${tags[i]}</p>`
-              } 
+                let tags = JSON.parse(transcription.tags);
+                for (let i = 0; i < ((tags.length < 4) ? tags.length : 4); i++) {
+                  temp += `<p class="tag-nohover">${tags[i]}</p>`
+                }
 
-              temp += '</div>';
+                temp += '</div>';
 
-              temp += `<div class="flex-item" id="transcription-preview">`
-              if (transcription.mimetype == 'application/pdf') {
-                temp += `<img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/${transcription.filename}" width="200" height="258" />`;
-              } else {
-                temp += `<img src="/uploads/${transcription.filename}" alt="preview" width="200" height="258" class="img-cover" />`;
+                temp += `<div class="flex-item" id="transcription-preview">`
+                if (transcription.mimetype == 'application/pdf') {
+                  temp += `<img src="/static/res/pdf.png" class="pdf-thumbnail" pdf-path="/uploads/${transcription.filename}" width="200" height="258" />`;
+                } else {
+                  temp += `<img src="/uploads/${transcription.filename}" alt="preview" width="200" height="258" class="img-cover" />`;
+                }
+
+                temp += '</div>';
+                temp += '</div>';
+
+                document.getElementById('recentTranscriptions').innerHTML += temp;
               }
-
-              temp += '</div>';
-              temp += '</div>';
-
-              document.getElementById('recentTranscriptions').innerHTML += temp;
-            })
+            });
           }
         });
     }
 
-    document.addEventListener('scroll', function (event) {
+    function checkForLoad() {
       let scrollY = window.innerHeight + window.scrollY;
 
       // User has scrolled to the bottom of the page
       if (scrollY >= document.body.scrollHeight) {
         loadNewTranscriptions();
       }
+    }
+
+    document.addEventListener('scroll', function (event) {
+      checkForLoad();
     });
 
     document.addEventListener('DOMContentLoaded', () => {

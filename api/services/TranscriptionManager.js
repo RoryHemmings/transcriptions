@@ -34,7 +34,7 @@ function checkValidFileInfo(fileInfo) {
 			fileInfo.mimetype == "application/pdf"
 		)
 	) {
-		return "Only file types pdf, png, and jpg are accepted";
+		return "Invalid file type, Only file types pdf, png, jpg, and jpeg are accepted";
 	}
 
 	return undefined;
@@ -224,6 +224,15 @@ const TranscriptionManager = {
 	},
 	search: async (term, pageNumber) => {
 		let resultMap = new Map();
+
+		// Tag search
+		if (term.includes('tag=')) {
+			let tag = term.split('=')[1];
+			let ret = await database.searchForTranscriptionsByTag(tag);
+
+			return ret;
+		}
+
 		const keywords = term.split(" ");
 
 		/**

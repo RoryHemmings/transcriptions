@@ -36,15 +36,24 @@ const storage = multer.diskStorage({
 		} else if (file.mimetype == "application/pdf") {
 			suffix = ".pdf";
 		}
+
 		cb(null, filename + suffix);
 	},
 });
 
 const upload = multer({
 	storage: storage,
+	fileFilter: (req, file, cb) => {
+		let ext = path.extname(file.originalname);
+		if (ext == '.png' || ext == '.jpg' || ext == '.jpeg' || ext == '.pdf') {
+			cb(null, true);
+		} else {
+			cb(new Error('Invalid file type, Only file types pdf, png, jpg, and jpeg are accepted'));
+		}
+	},
 	limits: {
 		fileSize: 6000000,
-	},
+	}
 }).single("file");
 
 // Passport config
@@ -130,6 +139,7 @@ app.get("/search", async (req, res) => {
 	res.render("search", {
 		user: req.user,
 		pageNumber: pageNumber,
+		searchTerm: term,
 		results,
 	});
 });

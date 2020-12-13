@@ -26,11 +26,11 @@
         <div class="row">
           <% let tags = JSON.parse(transcription.tags); %>
           <% for (let i = 0; i < ((tags.length < 4) ? tags.length : 4); i++) { %>
-          <p class="tag" onclick="reroute('/search/?term=<%=tags[i]%>')"><%=tags[i]%></p>
+          <p class="tag" onclick="reroute('/search/?term=tag=<%=tags[i]%>')"><%=tags[i]%></p>
           <% } %>
         </div>
         <div class="row">
-          <p class="text-muted">Click on tags to see other transcriptions with them</p>
+          <p class="text-muted">Click on tags to see other transcriptions with the same tags</p>
         </div>
 
         <div class="row">
