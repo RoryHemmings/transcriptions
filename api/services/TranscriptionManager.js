@@ -17,6 +17,16 @@ function checkValidTitle(title) {
 	return undefined;
 }
 
+function checkValidDescription(description) {
+	if (description) {
+		if (description.length > 5000) {
+			return "Description must be less than 5000 characters";
+		}
+	}
+
+	return undefined;
+}
+
 function checkValidFileInfo(fileInfo) {
 	if (!fileInfo || !fileInfo.size) {
 		return "Invalid File";
@@ -71,11 +81,17 @@ async function updateTranscription(transcription) {
 }
 
 const TranscriptionManager = {
-	createTranscription: async (title, fileInfo, author, tags) => {
+	createTranscription: async (title, fileInfo, author, description, tags) => {
 		const titleError = checkValidTitle(title);
+		const descriptionError = checkValidDescription(description);
 		const fileInfoError = checkValidFileInfo(fileInfo);
+
 		if (titleError) {
 			return titleError;
+		}
+
+		if (descriptionError) {
+			return descriptionError;
 		}
 
 		if (fileInfoError) {
@@ -104,6 +120,7 @@ const TranscriptionManager = {
 			title,
 			dateCreated,
 			tags,
+			description,
 			author: author.username,
 			authorId: author.id,
 			likes: [], // Will be stored as an array of user_ids

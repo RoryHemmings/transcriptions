@@ -166,20 +166,20 @@ app.get("/register", (req, res) => {
 });
 
 // Users profile
-app.get("/user/:id", async (req, res) => {
+app.get("/user/:username", async (req, res) => {
 	// TODO refactor this system to pass user to browser and route directly to id
-	if (req.params.id === "USER_PROFILE") {
+	if (req.params.username === "USER_PROFILE") {
 		if (!req.isAuthenticated() || !req.user) {
 			res.redirect("/login");
 			return;
 		}
-		res.redirect(`/user/${req.user.id}`);
+		res.redirect(`/user/${req.user.username}`);
 		return;
 	}
 
-	const id = req.params.id;
+	const username = req.params.username;
 
-	const user = await UserManager.findUserById(id);
+	const user = await UserManager.findUserByUsername(username);
 	if (user === null) {
 		res.render("profile", {
 			notFound: true,
@@ -337,8 +337,10 @@ app.post("/upload", async (req, res) => {
 				req.body.title,
 				req.file,
 				req.user,
+				req.body.description,
 				req.body.tags
 			);
+
 			if (!error) {
 				res.redirect("/user/" + req.user.id);
 			} else {

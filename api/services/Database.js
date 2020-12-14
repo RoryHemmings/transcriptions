@@ -70,13 +70,14 @@ const database = {
   },
   insertTranscription: async (transcription) => {
     return new Promise((resolve, reject) => {
-      db.run('INSERT INTO transcriptions (id, title, encoding, mimetype, size, filename, author, authorID, dateCreated, tags, likes, dislikes, comments) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      db.run('INSERT INTO transcriptions (id, title, encoding, mimetype, size, filename, author, authorID, dateCreated, description, tags, likes, dislikes, comments) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [transcription.id, transcription.title,
           transcription.encoding, transcription.mimetype,
           transcription.size, transcription.filename,
           transcription.author,
           transcription.authorId,
           transcription.dateCreated,
+          transcription.description,
           JSON.stringify(transcription.tags),
           JSON.stringify(transcription.likes),
           JSON.stringify(transcription.dislikes),
@@ -239,7 +240,8 @@ module.exports = database;
 
   tags are stringified arrays since sqlite cant store arrays
   CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, author TEXT, dateCreated TEXT, tags TEXT, likes TEXT, dislikes TEXT, comments TEXT);
-  CREATE VIRTUAL TABLE transcriptions USING FTS5(id, title, encoding, mimetype, size, filename, author, authorId, dateCreated, tags, likes, dislikes, comments);
+  TODO fix description...
+  CREATE VIRTUAL TABLE transcriptions USING FTS5(id, title, encoding, mimetype, size, filename, author, authorId, dateCreated, description, tags, likes, dislikes, comments);
 
   Not case sensitive, change column name or just use table name if you want to search the entire thing
   SELECT * FROM transcriptions WHERE transcriptions MATCH 'query';

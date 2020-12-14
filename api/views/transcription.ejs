@@ -29,9 +29,11 @@
           <p class="tag" onclick="reroute('/search/?term=tag=<%=tags[i]%>')"><%=tags[i]%></p>
           <% } %>
         </div>
+        <% if (tags.length > 0) { %>
         <div class="row">
           <p class="text-muted">Click on tags to see other transcriptions with the same tags</p>
         </div>
+        <% } %>
 
         <div class="row">
           <a href="/uploads/<%=transcription.filename%>" download>Download</a>
@@ -83,6 +85,12 @@
                 <p class="text-justify" id="num-dislikes">Dislikes: <%=dislikes.length%></p>
               </div>
             </div>
+          </div>
+          <div class="row" id="description">
+            <h5>Description</h5>
+          </div>
+          <div class="row">
+            <p><%=transcription.description%></p>
           </div>
           <div class="row" id="new-comment">
             <form id="comment-form" action="/transcription/comment" method="POST">
