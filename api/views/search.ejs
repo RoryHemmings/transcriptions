@@ -1,11 +1,14 @@
 <head>
   <%- include('./partials/head'); %>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"
+    integrity="sha512-Z8CqofpIcnJN80feS2uccz+pXWgZzeKxDsDNMD/dJ6997/LSRY+W4NmEt9acwR+Gt9OHN0kkI1CTianCwoqcjQ=="
+    crossorigin="anonymous"></script>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
   <%- include('./partials/navbar') %>
   <main class="container">
-    <h1 class="text-center">
+    <h1 class="text-center title">
       Search
     </h1>
 
@@ -22,14 +25,14 @@
 
     <div id="serachResults" class="container">
       <% if (results.length < 1) { %>
-      <h3 class="info">No Results</h3>
+      <h3 class="info centeredText">No Results</h3>
       <% } else { %>
       <% results.forEach(transcription => { %>
       <div class="row">
         <div class="transcription flex-item flex-container" onclick="reroute('/transcription/<%=transcription.id%>')">
           <div class="flex-item" id="transcription-info">
             <h5 id="title"><%=transcription.title%></h5>
-            <a id="author" href="/user/<%=transcription.authorId%>"><%=transcription.author%></a>
+            <a id="author" href="/user/<%=transcription.author%>"><%=transcription.author%></a>
             <p id="dateCreated" class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
 
             <% let tags = JSON.parse(transcription.tags); %>
@@ -69,9 +72,9 @@
 
       <div class="flex-item">
         <% if (results.length >= 20) { %>
-        <button class="btn btn-primary" onclick="changePage(1)">Next Page</button>
+        <button class="btn btn-primary nextPage" onclick="changePage(1)">Next Page</button>
         <% } else { %>
-        <button class="btn btn-primary" onclick="changePage(1)" disabled>Next Page</button>
+        <button class="btn btn-primary nextPage" onclick="changePage(1)" disabled>Next Page</button>
         <% } %>
       </div>
 
@@ -82,6 +85,8 @@
   <footer class="mt-auto">
     <%- include('./partials/footer'); %>
   </footer>
+
+  <script src="/static/js/pdf_utils.js"></script>
 
   <script>
 

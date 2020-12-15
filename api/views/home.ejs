@@ -13,7 +13,7 @@
 <body class="d-flex flex-column min-vh-100">
   <%- include('./partials/navbar') %>
   <main class="container">
-    <h1 class="text-center">Recent Transcriptions</h1>
+    <h1 class="text-center title">Recent Transcriptions</h1><hr>
     <div id="recentTranscriptions">
 
     </div>
@@ -49,9 +49,9 @@
                 temp += `<div class="transcription flex-item flex-container" onclick="reroute('/transcription/${transcription.id}')">`;
                 temp += `<div class="flex-item" id="transcription-info">`;
                 temp += `<h5 id="title">${transcription.title}</h5>`;
-                temp += `<a id="author" href="/user/${transcription.authorId}">${transcription.author}</a>`;
-                temp += `<p id="dateCreated" class="text-muted">${new Date(transcription.dateCreated).toLocaleDateString()}</p>`;
-                temp += `<p id="numLikes" class="text-muted">👍 ${JSON.parse(transcription.likes).length} | 👎 ${JSON.parse(transcription.dislikes).length}</p>`;
+                temp += `<a id="author" href="/user/${transcription.author}">${transcription.author}</a>`;
+                temp += `<p id="dateCreated">${new Date(transcription.dateCreated).toLocaleDateString()}</p>`;
+                temp += `<p id="numLikes">👍 ${JSON.parse(transcription.likes).length} | 👎 ${JSON.parse(transcription.dislikes).length}</p>`;
 
                 let tags = JSON.parse(transcription.tags);
                 for (let i = 0; i < ((tags.length < 4) ? tags.length : 4); i++) {
@@ -73,6 +73,7 @@
                 document.getElementById('recentTranscriptions').innerHTML += temp;
               }
             });
+            generatePDFs();
           }
         });
     }

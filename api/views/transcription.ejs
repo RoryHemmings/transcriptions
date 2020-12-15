@@ -14,9 +14,9 @@
           <h1><%=transcription.title%></h1>
         </div>
         <div class="row">
-          <a id="author" href="/user/<%=transcription.authorId%>"><%=transcription.author%></a>
+          <a id="author" href="/user/<%=transcription.author%>"><%=transcription.author%></a>
           <% if (authenticated) { %>
-          <button type="button" class="btn btn-primary" onclick="deleteTranscription()">Delete</button>
+          <button style="margin-left: 10px; margin-bottom: 10px;" type="button" class="btn btn-primary" onclick="deleteTranscription()">Delete</button>
           <% } %>
         </div>
         <div class="row">
@@ -57,24 +57,24 @@
             <% if (user != undefined) { %>
 
             <% if (!likes.includes(user.id)) { %>
-            <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()">Like</button>
+            <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()" style="margin: 10px;">Like</button>
             <% } else { %>
-            <button name="like-button" id="like-button" class="btn btn-secondary" onclick="likePost()"
+            <button name="like-button" id="like-button" class="btn btn-secondary" onclick="likePost()" style="margin: 10px;"
               disabled>Like</button>
             <% } %>
 
             <% if (!dislikes.includes(user.id)) { %>
-            <button name="dislike-button" id="dislike-button" class="btn btn-danger"
+            <button name="dislike-button" id="dislike-button" class="btn btn-danger" style="margin: 10px;"
               onclick="dislikePost()">Dislike</button>
             <% } else { %>
-            <button name="dislike-button" id="dislike-button" class="btn btn-secondary" onclick="dislikePost()"
+            <button name="dislike-button" id="dislike-button" class="btn btn-secondary" onclick="dislikePost()" style="margin: 10px;"
               disabled>Dislike</button>
             <% } %>
 
             <% } else {%>
-            <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()">Like</button>
+            <button name="like-button" id="like-button" class="btn btn-primary" onclick="likePost()" style="margin: 10px;">Like</button>
             <button name="dislike-button" id="dislike-button" class="btn btn-danger"
-              onclick="dislikePost()">Dislike</button>
+              onclick="dislikePost()" style="margin: 10px;">Dislike</button>
             <% } %>
 
             <div class="container">
@@ -112,7 +112,7 @@
               <div class="comment">
                 <hr>
                 <a id="comment-username" class="text-justify font-weight-bold"
-                  href="/user/<%=comments[i].userId%>"><%=comments[i].username%></a>
+                  href="/user/<%=comments[i].username%>"><%=comments[i].username%></a>
                 <p id="comment-date" class="text-muted"><%=new Date(comments[i].dateCreated).toLocaleString()%></p>
                 <p id="comment-text" class="text-justify"><%=comments[i].comment%></p>
                 <% if (user) { %>

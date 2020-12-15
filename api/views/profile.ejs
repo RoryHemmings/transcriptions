@@ -30,7 +30,7 @@
         <div class="transcription flex-item flex-container" onclick="reroute('/transcription/<%=transcription.id%>')">
           <div class="flex-item" id="transcription-info">
             <h5 id="title"><%=transcription.title%></h5>
-            <a id="author" href="/user/<%=transcription.authorId%>"><%=transcription.author%></a>
+            <a id="author" href="/user/<%=transcription.author%>"><%=transcription.author%></a>
             <p class="text-muted"><%=new Date(transcription.dateCreated).toLocaleDateString()%></p>
 
             <% let tags = JSON.parse(transcription.tags); %>

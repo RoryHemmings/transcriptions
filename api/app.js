@@ -202,7 +202,7 @@ app.get("/user/:username", async (req, res) => {
 
 	let authenticated = false;
 	if (req.user) {
-		if (req.isAuthenticated() && req.user.id === req.params.id) {
+		if (req.isAuthenticated() && req.user.username === req.params.username) {
 			authenticated = true;
 		}
 	}
@@ -342,7 +342,7 @@ app.post("/upload", async (req, res) => {
 			);
 
 			if (!error) {
-				res.redirect("/user/" + req.user.id);
+				res.redirect("/user/" + req.user.username);
 			} else {
 				req.flash("error", error);
 				res.redirect("/upload");
