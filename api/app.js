@@ -262,31 +262,19 @@ app.get("/auth/logout", (req, res) => {
 	res.redirect("/login");
 });
 
-// POST new users
+// POST new user
 app.post("/auth/register", async (req, res) => {
-	const result = await UserManager.createUser(
+	const ret = await UserManager.createUser(
+		req.body.email,
 		req.body.username,
-		req.body.password
+		req.body.password,
+		req.body.confirmPassword
 	);
-	if (result === 0) {
+
+	if (!ret.error) {
 		res.redirect("/login");
-	} else if (result === 1) {
-		req.flash("error", "user already exists");
-		res.redirect("/register");
-	} else if (result === 2) {
-		req.flash(
-			"error",
-			"invalid username (usernames must consist of alphanumeric characters only, and be between 3 and 20 characters long"
-		);
-		res.redirect("/register");
-	} else if (result === 3) {
-		req.flash(
-			"error",
-			"invalid password (passwords must be between 6 and 20 characters long)"
-		);
-		res.redirect("/register");
-	} else if (result === -1) {
-		req.flash("error", "internal server error");
+	} else {
+		req.flash("error", ret.message);
 		res.redirect("/register");
 	}
 });
@@ -309,7 +297,7 @@ app.post("/settings", async (req, res) => {
 			res.status(500);
 		}
 	}
-	res.redirect(`/user/${user.id}`);
+	res.redirect(`/user/${user.username}`);
 });
 
 app.post("/upload", async (req, res) => {
@@ -329,11 +317,11 @@ app.post("/upload", async (req, res) => {
 			res.redirect("/upload");
 		} else {
 			if (!req.file) {
-				req.flash("error", "Internal Server Error");
+				req.flash("error", "No file was provided");
 				res.redirect("/upload");
 			}
 
-			const error = await TranscriptionManager.createTranscription(
+			const ret = await TranscriptionManager.createTranscription(
 				req.body.title,
 				req.file,
 				req.user,
@@ -341,10 +329,10 @@ app.post("/upload", async (req, res) => {
 				req.body.tags
 			);
 
-			if (!error) {
+			if (!ret.error) {
 				res.redirect("/user/" + req.user.username);
 			} else {
-				req.flash("error", error);
+				req.flash("error", ret.message);
 				res.redirect("/upload");
 			}
 		}

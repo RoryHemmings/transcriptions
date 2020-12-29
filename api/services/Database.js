@@ -25,7 +25,7 @@ function isStringifiedJson(obj) {
 const database = {
   insertUser: async (user) => {
     return new Promise((resolve, reject) => {
-      db.run(`INSERT INTO users(id, username, bio, passwordHash) VALUES(?, ?, ?, ?)`, [user.id, user.username, user.bio, user.passwordHash], (err, res) => {
+      db.run(`INSERT INTO users(id, email, username, bio, passwordHash) VALUES(?, ?, ?, ?, ?)`, [user.id, user.email, user.username, user.bio, user.passwordHash], (err, res) => {
         if (err) {
           reject(err);
         }
@@ -34,12 +34,24 @@ const database = {
       });
     });
   },
+  findUserByEmail: async (email) => {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT * FROM users WHERE email = ?', [email], (err, res) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        }
+
+        resolve(res);
+      });
+    }); 
+  },
   findUserByUsername: async (username) => {
     return new Promise((resolve, reject) => {
       db.get('SELECT * FROM users WHERE username = ?', [username], (err, res) => {
         if (err) {
           console.error(err);
-          reject(error);
+          reject(err);
         }
 
         resolve(res);
@@ -51,7 +63,7 @@ const database = {
       db.get('SELECT * FROM users WHERE id = ?', [id], (err, res) => {
         if (err) {
           console.error(err);
-          reject(error);
+          reject(err);
         }
 
         resolve(res);
@@ -239,8 +251,8 @@ module.exports = database;
   db.run can be used to insert data or any other command (calls callback)
 
   tags are stringified arrays since sqlite cant store arrays
+  CREATE TABLE users (id BLOB PRIMARY KEY, email TEXT, username TEXT, bio TEXT, passwordHash BLOB);
   CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, author TEXT, dateCreated TEXT, tags TEXT, likes TEXT, dislikes TEXT, comments TEXT);
-  TODO fix description...
   CREATE VIRTUAL TABLE transcriptions USING FTS5(id, title, encoding, mimetype, size, filename, author, authorId, dateCreated, description, tags, likes, dislikes, comments);
 
   Not case sensitive, change column name or just use table name if you want to search the entire thing
@@ -250,5 +262,6 @@ module.exports = database;
 
   LIMIT 10 OFFSET 10 (gets 10 rows starting from the 11th row)
 
+  .schema table (shows everything you need to know about the table)
   751f4448-d7bd-4fc9-a2eb-15eef9bfb84d
 */

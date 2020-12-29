@@ -25,7 +25,7 @@
 
         <div class="row">
           <% let tags = JSON.parse(transcription.tags); %>
-          <% for (let i = 0; i < ((tags.length < 4) ? tags.length : 4); i++) { %>
+          <% for (let i = 0; i < tags.length; i++) { %>
           <p class="tag" onclick="reroute('/search/?term=tag=<%=tags[i]%>')"><%=tags[i]%></p>
           <% } %>
         </div>

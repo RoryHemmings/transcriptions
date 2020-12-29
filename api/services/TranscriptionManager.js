@@ -4,27 +4,32 @@
  */
 
 const { v4: uuidv4 } = require("uuid");
+const utils = require("./../utils");
 const database = require("./Database");
 
 const fs = require("fs");
+const { createSuccess } = require("./../utils");
 
 function checkValidTitle(title) {
 	// If title is undefined or has a length of more than 100 characters
-	if (!title || title.length > 100 || title.length < 1) {
-		return "Title must be between 1 and 100 characters long";
-	}
+	// if (!title || title.length > 100 || title.length < 1) {
+	// 	return "Title must be between 1 and 100 characters long";
+	// }
 
-	return undefined;
+	// return undefined;
+	return !(!title || title.length > 100 || title.length < 1);
 }
 
 function checkValidDescription(description) {
 	if (description) {
-		if (description.length > 5000) {
-			return "Description must be less than 5000 characters";
-		}
+		// if (description.length > 5000) {
+		// 	return "Description must be less than 5000 characters";
+		// }
+		return description.length < 5000;
 	}
 
-	return undefined;
+	// An empty description is valid
+	return true;
 }
 
 function checkValidFileInfo(fileInfo) {
@@ -82,20 +87,18 @@ async function updateTranscription(transcription) {
 
 const TranscriptionManager = {
 	createTranscription: async (title, fileInfo, author, description, tags) => {
-		const titleError = checkValidTitle(title);
-		const descriptionError = checkValidDescription(description);
+		if (!checkValidTitle(title)) {
+			return utils.createError('Title must be between 1 and 100 characters long');
+		}
+
+		if (!checkValidDescription(description)) {
+			return utils.createError('Description must be less than 5000 characters');
+		}
+
+		// Breaks my own practice but this wierd way of doing things actually works better here
 		const fileInfoError = checkValidFileInfo(fileInfo);
-
-		if (titleError) {
-			return titleError;
-		}
-
-		if (descriptionError) {
-			return descriptionError;
-		}
-
 		if (fileInfoError) {
-			return fileInfoError;
+			return utils.createError(fileInfoError);
 		}
 
 		const id = uuidv4();
@@ -133,6 +136,8 @@ const TranscriptionManager = {
 		};
 
 		saveToDB(transcription);
+
+		return utils.createSuccess();
 	},
 	findTranscriptionById: async (id) => {
 		const res = await database.findTranscriptionById(id).catch((err) => {
