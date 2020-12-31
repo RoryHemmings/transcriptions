@@ -5,18 +5,18 @@ const database = require("./Database");
 const bcrypt = require("bcrypt");
 
 class User {
-	constructor(id, email, username, passwordHash, bio = "") {
-    this._id = id;
-    this._email = email;
+	constructor(id, email, username, passwordHash, active = false, bio = "") {
+		this._id = id;
+		this._email = email;
 		this._username = username;
 		this._bio = bio;
 		this._passwordHash = passwordHash;
+
+		this._active = active;
 	}
 
 	// Save user to database
 	async saveToDB() {
-		// console.log(`Saving user ${this} to database`);
-		// users.push(this);
 		database
 			.insertUser(this)
 			.then((res) => {
@@ -40,20 +40,31 @@ class User {
 
 	getShorthandVersion() {
 		return {
-      email: this._email,
+			email: this._email,
 			username: this._username,
 			id: this._id,
 			bio: this._bio,
 		};
 	}
 
+	activate() {
+		this._active = true;
+
+		// Saves active state to database
+		this.updateSettings();
+	}
+
+	isActive() {
+		return this._active;
+	}
+
 	get id() {
 		return this._id;
-  }
-  
-  get email() {
-    return this._email;
-  }
+	}
+
+	get email() {
+		return this._email;
+	}
 
 	get username() {
 		return this._username;
@@ -77,8 +88,12 @@ class User {
 	}
 }
 
+function createUserFromSettings(res) {
+	return new User(res.id, res.email, res.username, res.passwordHash, res.active, res.bio);
+}
+
 function checkValidEmail(email) {
-  return email.includes('@');
+	return email.includes("@");
 }
 
 function checkValidUsername(username) {
@@ -97,9 +112,9 @@ function checkValidPassword(password) {
 
 const UserManager = {
 	createUser: async (email, username, password, confirmPassword) => {
-    if (!checkValidEmail(email)) {
-      return utils.createError("Invalid Email");
-    }
+		if (!checkValidEmail(email)) {
+			return utils.createError("Invalid Email");
+		}
 
 		if (!checkValidUsername(username)) {
 			return utils.createError(
@@ -111,7 +126,7 @@ const UserManager = {
 			return utils.createError(
 				"Invalid password (passwords must be between 6 and 20 characters long)"
 			);
-    }
+		}
 
 		if (password != confirmPassword) {
 			return utils.createError("Passwords do not match");
@@ -119,11 +134,11 @@ const UserManager = {
 
 		if ((await UserManager.findUserByUsername(username)) != null) {
 			return utils.createError("A user with that username already exists");
-    }
-    
-    if ((await UserManager.findUserByEmail(email)) != null) {
-      return utils.createError("A user with that email already exists");
-    }
+		}
+
+		if ((await UserManager.findUserByEmail(email)) != null) {
+			return utils.createError("A user with that email already exists");
+		}
 
 		try {
 			// Creates "unique" id for user (has an insanely low chance of ever being repeated)
@@ -133,13 +148,14 @@ const UserManager = {
 			const salt = await bcrypt.genSalt();
 			const hashedPassword = await bcrypt.hash(password, salt);
 
-			// Save new user
+			// Save new user (not activated by default)
 			const user = new User(id, email, username, hashedPassword);
 			user.saveToDB();
 
 			// Success
-			return utils.createSuccess();
-		} catch {
+			return utils.createSuccess(user);
+		} catch (err) {
+			console.error(err);
 			return utils.createError("Internal Server Error");
 		}
 	},
@@ -150,7 +166,7 @@ const UserManager = {
 			return null;
 		}
 
-		return new User(res.id, res.email, res.username, res.passwordHash, res.bio);
+		return createUserFromSettings(res);
 	},
 	findUserByUsername: async (username) => {
 		// Return first occurance of user with same username
@@ -159,7 +175,7 @@ const UserManager = {
 			return null;
 		}
 
-		return new User(res.id, res.email, res.username, res.passwordHash, res.bio);
+		return createUserFromSettings(res);
 	},
 	findUserById: async (id) => {
 		// Return first occurance of user with same id
@@ -168,10 +184,8 @@ const UserManager = {
 			return null;
 		}
 
-		return new User(res.id, res.email, res.username, res.passwordHash, res.bio);
+		return createUserFromSettings(res);
 	},
 };
 
-// Debug user
-// UserManager.createUser('test', 'test');
 module.exports = UserManager;

@@ -13,6 +13,7 @@ const session = require("express-session");
 const multer = require("multer");
 
 // Services
+const utils = require("./utils");
 const UserManager = require("./services/UserManager");
 const TranscriptionManager = require("./services/TranscriptionManager");
 const initializePassport = require("./passport-config");
@@ -108,6 +109,7 @@ app.get("/upload", checkAuthenticated, (req, res) => {
 		user: req.user,
 	});
 });
+
 // app.get("/", async (req, res) => {
 // 	let recentTranscriptions = [];
 // 	recentTranscriptions = await TranscriptionManager.getRecentTranscriptions(20);
@@ -262,6 +264,24 @@ app.get("/auth/logout", (req, res) => {
 	res.redirect("/login");
 });
 
+/**
+	User will get email with link to /activate/(their userid)
+	When clicked on, this link will activate the user
+	Since there is no other way to have the userId before activation, 
+	this can't be exploited by anyone else. It can only be activated 
+	by the person who gets the email unless they either have access 
+	to the database or guess the user id which is mathematically impossible.
+*/
+app.get("/activate/:id", async (req, res) => {
+	const id = req.params.id;
+	const user = await UserManager.findUserById(id);
+
+	user.activate();
+
+	req.flash("success", "Your account has been activated, you may now log in.");
+	res.redirect('/login');
+});
+
 // POST new user
 app.post("/auth/register", async (req, res) => {
 	const ret = await UserManager.createUser(
@@ -272,7 +292,12 @@ app.post("/auth/register", async (req, res) => {
 	);
 
 	if (!ret.error) {
-		res.redirect("/login");
+		const user = ret.data;
+		utils.sendEmail(user.email, `Click this link in order to activate your account.\nlocalhost/activate/${user.id}`);
+		res.render("activationLimbo", {
+			user: req.user,
+			email: user.email 
+		});
 	} else {
 		req.flash("error", ret.message);
 		res.redirect("/register");

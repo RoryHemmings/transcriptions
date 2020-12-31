@@ -1,0 +1,20 @@
+
+<head>
+  <%- include('./partials/head'); %>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+  <%- include('./partials/navbar') %>
+  <main class="container">
+    <h1 class="text-center">
+      Login
+    </h1>
+    <p>An email has been sent to <%=email%> with an activation link. Go to this link to activate your acount. Click the button bellow to resend the email.</p> 
+    <a href="/verify/<%=email%>" class="btn btn-primary">Resend</a>
+  </main>
+
+  <footer class="mt-auto">
+    <%- include('./partials/footer'); %>
+  </footer>
+
+</body>

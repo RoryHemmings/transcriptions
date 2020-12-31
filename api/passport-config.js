@@ -10,12 +10,19 @@ async function initialize(passport, getUserByUsername, getUserById) {
     }
 
     try {
+      // Prevents user from logging in if they have not verified their email
+      if (!user.isActive()) {
+        return done(null, false, {
+          message: 'Account is not activated (please check email for activation link)'
+        });
+      }
+
       if (await user.authenticate(password)) {
         return done(null, user.getShorthandVersion());
       } else {
         return done(null, false, {
           message: 'Password incorrect'
-        })
+        });
       }
     } catch (e) {
       return done(e);

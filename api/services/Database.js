@@ -25,8 +25,9 @@ function isStringifiedJson(obj) {
 const database = {
   insertUser: async (user) => {
     return new Promise((resolve, reject) => {
-      db.run(`INSERT INTO users(id, email, username, bio, passwordHash) VALUES(?, ?, ?, ?, ?)`, [user.id, user.email, user.username, user.bio, user.passwordHash], (err, res) => {
+      db.run(`INSERT INTO users(id, email, username, active, bio, passwordHash) VALUES(?, ?, ?, ?, ?, ?)`, [user.id, user.email, user.username, user.isActive(), user.bio, user.passwordHash], (err, res) => {
         if (err) {
+          console.error(err)
           reject(err);
         }
 
@@ -72,10 +73,11 @@ const database = {
   },
   updateSettings: async (user) => {
     return new Promise((resolve, reject) => {
-      db.run('UPDATE users SET bio = ?, passwordHash = ? WHERE id = ?', [user.bio, user.passwordHash, user.id], (err) => {
+      db.run('UPDATE users SET bio = ?, passwordHash = ?, active = ? WHERE id = ?', [user.bio, user.passwordHash, user.isActive(), user.id], (err) => {
         if (err) {
           reject(err);
         }
+
         resolve(true);
       })
     });
@@ -251,7 +253,8 @@ module.exports = database;
   db.run can be used to insert data or any other command (calls callback)
 
   tags are stringified arrays since sqlite cant store arrays
-  CREATE TABLE users (id BLOB PRIMARY KEY, email TEXT, username TEXT, bio TEXT, passwordHash BLOB);
+  True is 1 and False is 0 for active
+  CREATE TABLE users (id BLOB PRIMARY KEY, email TEXT, username TEXT, active INTEGER, bio TEXT, passwordHash BLOB);
   CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, author TEXT, dateCreated TEXT, tags TEXT, likes TEXT, dislikes TEXT, comments TEXT);
   CREATE VIRTUAL TABLE transcriptions USING FTS5(id, title, encoding, mimetype, size, filename, author, authorId, dateCreated, description, tags, likes, dislikes, comments);
 

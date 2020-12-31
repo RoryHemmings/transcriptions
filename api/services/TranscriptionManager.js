@@ -137,7 +137,7 @@ const TranscriptionManager = {
 
 		saveToDB(transcription);
 
-		return utils.createSuccess();
+		return utils.createSuccess(transcription);
 	},
 	findTranscriptionById: async (id) => {
 		const res = await database.findTranscriptionById(id).catch((err) => {

@@ -19,8 +19,12 @@
         <input name="password" type="password" class="form-control" placeholder="Password" />
       </div><br>
 
-      <% if(messages.error) { %>
+      <% if (messages.error) { %>
         <p class="text-danger"><%= messages.error %></p>
+      <% } %>
+      
+      <% if (messages.success) { %>
+        <p class="text-success"><%= messages.success %></p>
       <% } %>
       
       <button type="submit" class="btn btn-primary">Submit</button><br><br>
