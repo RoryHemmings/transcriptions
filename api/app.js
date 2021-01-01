@@ -60,8 +60,8 @@ const upload = multer({
 // Passport config
 initializePassport(
 	passport,
-	async (username) => {
-		return await UserManager.findUserByUsername(username);
+	async (email) => {
+		return await UserManager.findUserByEmail(email);
 	},
 	async (id) => {
 		return await UserManager.findUserById(id);
@@ -293,7 +293,7 @@ app.post("/auth/register", async (req, res) => {
 
 	if (!ret.error) {
 		const user = ret.data;
-		utils.sendEmail(user.email, `Click this link in order to activate your account.\nlocalhost/activate/${user.id}`);
+		utils.sendEmail(user.email, 'Account Verification', `Click this link in order to activate your account.\nlocalhost/activate/${user.id}`);
 		res.render("activationLimbo", {
 			user: req.user,
 			email: user.email 
@@ -312,6 +312,18 @@ app.post(
 		failureFlash: true,
 	})
 );
+
+app.post('/auth/resendVerification/', async (req, res) => {
+	const email = req.body.email;
+	const user = await UserManager.findUserByEmail(email);
+	
+	let success = false;
+	if (!user.isActive()) {
+		success = await utils.sendEmail(user.email, 'Account Verification', `Click this link in order to activate your account.\nlocalhost/activate/${user.id}`);
+	}
+
+	res.json({success: success})
+});
 
 app.post("/settings", async (req, res) => {
 	let user = await UserManager.findUserById(req.user.id);

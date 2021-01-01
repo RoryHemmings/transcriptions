@@ -1,11 +1,11 @@
 const LocalStrategy = require('passport-local').Strategy
 
-async function initialize(passport, getUserByUsername, getUserById) {
-  const authenticateUser = async (username, password, done) => {
-    const user = await getUserByUsername(username);
+async function initialize(passport, getUserByEmail, getUserById) {
+  const authenticateUser = async (email, password, done) => {
+    const user = await getUserByEmail(email);
     if (user == null) {
       return done(null, false, {
-        message: 'No user with that username'
+        message: 'No user with that email'
       });
     }
 
@@ -30,7 +30,7 @@ async function initialize(passport, getUserByUsername, getUserById) {
   }
 
   passport.use(new LocalStrategy({
-    usernameField: 'username',
+    usernameField: 'email',
     passwordField: 'password'
   }, authenticateUser));
 
