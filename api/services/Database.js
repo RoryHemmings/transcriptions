@@ -209,12 +209,54 @@ const database = {
     return new Promise((resolve, reject) => {
       db.run('DELETE FROM transcriptions WHERE id = ?', [transcriptionId], (err, res) => {
         if (err) {
-          console.error(error);
+          console.error(err);
           reject(err);
         }
 
         resolve(res);
       });
+    });
+  },
+  saveFPKEmailPair: async (email, FPK) => {
+    return new Promise((resolve, reject) => {
+      db.run('DELETE FROM FPKEmailPairs WHERE email = ?', [email], (err, res) => {
+        if (err) {
+          console.error(err);
+        }
+      });
+
+      db.run('INSERT INTO FPKEmailPairs (email, FPK) VALUES (?, ?)', [email, FPK], (err, res) => {
+        if (err) {
+          console.error(err);
+          reject(false);
+        }
+
+        resolve(true);
+      });
+    });
+  },
+  findFPKEmailPair: async (FPK) => {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT * FROM FPKEmailPairs where FPK = ?', [FPK], (err, res) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        }
+
+        resolve(res);
+      });
+    }); 
+  },
+  deleteFPKEmailPair: async (email) => {
+    return new Promise((resolve, reject) => {
+      db.run('DELETE FROM FPKEmailPairs where email = ?', [email], (err, res) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        }
+
+        resolve(res);
+      })
     });
   },
   close: () => {
@@ -257,6 +299,7 @@ module.exports = database;
   CREATE TABLE users (id BLOB PRIMARY KEY, email TEXT, username TEXT, active INTEGER, bio TEXT, passwordHash BLOB);
   CREATE TABLE transcriptions (id BLOB PRIMARY KEY, title TEXT, encoding TEXT, mimetype TEXT, size INTEGER, filename TEXT, author TEXT, dateCreated TEXT, tags TEXT, likes TEXT, dislikes TEXT, comments TEXT);
   CREATE VIRTUAL TABLE transcriptions USING FTS5(id, title, encoding, mimetype, size, filename, author, authorId, dateCreated, description, tags, likes, dislikes, comments);
+  CREATE TABLE FPKEmailPairs (email TEXT PRIMARY KEY, FPK BLOB);
 
   Not case sensitive, change column name or just use table name if you want to search the entire thing
   SELECT * FROM transcriptions WHERE transcriptions MATCH 'query';

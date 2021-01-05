@@ -4,11 +4,20 @@
 
 const app = require('../app');
 const debug = require('debug')('server:server');
+
 const http = require('http');
+// const https = require('https');
+// const privateKey = fs.readFileSync('../srv/www/keys/server_key.pem', 'utf8');
+// const certificate = fs.readFileSync('../srv/www/keys/server_certificate.crt', 'utf8');
+// const options = {
+//   key: privateKey,
+//   cert: certificate
+// }
 
 const port = normalizePort(process.env.PORT || '80');
 app.set('port', port);
 
+// const server = http.createServer(options, app);
 const server = http.createServer(app);
 
 server.listen(port);

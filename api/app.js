@@ -46,15 +46,19 @@ const upload = multer({
 	storage: storage,
 	fileFilter: (req, file, cb) => {
 		let ext = path.extname(file.originalname);
-		if (ext == '.png' || ext == '.jpg' || ext == '.jpeg' || ext == '.pdf') {
+		if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".pdf") {
 			cb(null, true);
 		} else {
-			cb(new Error('Invalid file type, Only file types pdf, png, jpg, and jpeg are accepted'));
+			cb(
+				new Error(
+					"Invalid file type, Only file types pdf, png, jpg, and jpeg are accepted"
+				)
+			);
 		}
 	},
 	limits: {
 		fileSize: 6000000,
-	}
+	},
 }).single("file");
 
 // Passport config
@@ -239,18 +243,20 @@ app.get("/transcription/:id", async (req, res) => {
 	});
 });
 
-/** 
+/**
  * Returns recent transcriptions in json form
  */
 app.get("/recentTranscriptions", async (req, res) => {
-	const transcriptions = await TranscriptionManager.getRecentTranscriptions(Number(req.query.pageNumber));
+	const transcriptions = await TranscriptionManager.getRecentTranscriptions(
+		Number(req.query.pageNumber)
+	);
 
 	res.json({
 		transcriptions,
 		status: 200,
-		success: true
+		success: true,
 	});
-})
+});
 
 app.get("/settings", checkAuthenticated, (req, res) => {
 	res.render("userSettings", {
@@ -276,10 +282,36 @@ app.get("/activate/:id", async (req, res) => {
 	const id = req.params.id;
 	const user = await UserManager.findUserById(id);
 
+	if (user === null) {
+		res.send('Invalid Activation Id');
+		return;
+	}
 	user.activate();
 
 	req.flash("success", "Your account has been activated, you may now log in.");
-	res.redirect('/login');
+	res.redirect("/login");
+});
+
+app.get("/forgotPassword", (req, res) => {
+	res.render("forgotPassword", {
+		user: req.user,
+	});
+});
+
+app.get("/resetPassword", async (req, res) => {
+	const FPK = req.query.FPK;
+	const email = req.query.email;
+
+	const ret = await UserManager.verifyFPK(FPK, email);	
+
+	if (ret.error) {
+		res.send(ret.message);
+	} else {
+		res.render('resetPassword', {
+			user: req.user,
+			email,
+		})
+	}
 });
 
 // POST new user
@@ -293,10 +325,14 @@ app.post("/auth/register", async (req, res) => {
 
 	if (!ret.error) {
 		const user = ret.data;
-		utils.sendEmail(user.email, 'Account Verification', `Click this link in order to activate your account.\nlocalhost/activate/${user.id}`);
+		utils.sendEmail(
+			user.email,
+			"Account Verification",
+			`Click this link in order to activate your account.\nhttp://localhost/activate/${user.id}`
+		);
 		res.render("activationLimbo", {
 			user: req.user,
-			email: user.email 
+			email: user.email,
 		});
 	} else {
 		req.flash("error", ret.message);
@@ -313,16 +349,20 @@ app.post(
 	})
 );
 
-app.post('/auth/resendVerification/', async (req, res) => {
+app.post("/auth/resendVerification/", async (req, res) => {
 	const email = req.body.email;
 	const user = await UserManager.findUserByEmail(email);
-	
+
 	let success = false;
 	if (!user.isActive()) {
-		success = await utils.sendEmail(user.email, 'Account Verification', `Click this link in order to activate your account.\nlocalhost/activate/${user.id}`);
+		success = await utils.sendEmail(
+			user.email,
+			"Account Verification",
+			`Click this link in order to activate your account.\nhttp://localhost/activate/${user.id}`
+		);
 	}
 
-	res.json({success: success})
+	res.json({ success: success });
 });
 
 app.post("/settings", async (req, res) => {
@@ -411,6 +451,50 @@ app.post("/transcription/comment", checkAuthenticated, async (req, res) => {
 	});
 });
 
+app.post("/forgotPassword", async (req, res) => {
+	const email = req.body.email;
+	if ((await UserManager.findUserByEmail(email)) != null) {
+		const FPK = await UserManager.createFPKEmailPair(email);
+
+		if (FPK === undefined) {
+			res.json({ success: false, message: "internal server error" });
+			return;
+		}
+
+		if (
+			await utils.sendEmail(
+				email,
+				"Password Reset",
+				`Please click on this link to reset your account\nhttp://localhost/resetPassword?FPK=${FPK}&email=${email}`
+			)
+		) {
+			// If email is sent successfully
+			res.json({
+				success: true,
+				message: `Succesfully sent recovery email to ${email}. It may take a few minutes to show up in your inbox. If you still don't see it, check that the email is correct, and if so then try rentering it to resend`,
+			});
+		} else {
+			res.json({ success: false, message: "Recovery email failed to send" });
+		}
+	} else {
+		console.log(`Email Reset for ${email} not found`);
+		res.json({ success: false, message: "No user with that email exists" });
+	}
+});
+
+app.post("/resetPassword", async (req, res) => {
+	const ret = await UserManager.updatePassword(req.body.password, req.body.confirmPassword, req.body.email);
+
+	// Make sure that user isn't logged in already once they change their password
+	req.logOut();
+
+	if (ret.error) {
+		res.json({success: false, message: ret.message});
+	} else {
+		res.json({success: true, message: `Success. Password for ${ret.data.email} has been reset. Click <a href="/login">Here</a> to log in.`});
+	}	
+});
+
 /**
  * Make sure that user is authenticated so that somebody can't just send
  * a request to delete without login. Then check whether or not the userId
@@ -480,8 +564,8 @@ app.delete(
 		} else {
 			res.json({
 				status: 200,
-				success: true
-			})
+				success: true,
+			});
 		}
 	}
 );

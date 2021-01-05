@@ -82,6 +82,10 @@ class User {
 		this._bio = bio;
 	}
 
+	set passwordHash(hash) {
+		this._passwordHash = hash;
+	}
+
 	// String representation of User
 	toString() {
 		return `(id: ${this._id}, email: ${this._email}, username: ${this._username}, passwordHash: ${this._passwordHash})`;
@@ -89,7 +93,14 @@ class User {
 }
 
 function createUserFromSettings(res) {
-	return new User(res.id, res.email, res.username, res.passwordHash, res.active, res.bio);
+	return new User(
+		res.id,
+		res.email,
+		res.username,
+		res.passwordHash,
+		res.active,
+		res.bio
+	);
 }
 
 function checkValidEmail(email) {
@@ -185,6 +196,65 @@ const UserManager = {
 		}
 
 		return createUserFromSettings(res);
+	},
+	// Create forgot password key email pair
+	createFPKEmailPair: async (email) => {
+		// Creates "unique" id that is 32 characters long
+		const FPK = uuidv4();
+
+		if (!(await database.saveFPKEmailPair(email, FPK))) {
+			return undefined;
+		}
+		return FPK;
+	},
+	verifyFPK: async (FPK, email) => {
+		const FPKEmailPair = await database.findFPKEmailPair(FPK);
+
+		if (FPKEmailPair === undefined) {
+			return utils.createError(
+				"Invalid Link. Make sure that you check the most recent email with password reset instructions."
+			);
+		}
+
+		// If the email that is associated with the FPK in the database matches the email given.
+		/**
+		 * In order for this to be broken someone would have to guess an FPK which is almost impossible
+		 * and then they would also have to guess the corresponding email. This brings the possiblity
+		 * of someone finding the link that can reset a users password to what is essentially 0
+		 */
+		if (FPKEmailPair.email === email) {
+			return utils.createSuccess({ email: email });
+		}
+
+		return utils.createError(
+			"Invalid Link. Make sure that you check the most recent email with password reset instructions."
+		);
+	},
+	updatePassword: async (password, confirmPassword, email) => {
+		if (!checkValidPassword(password)) {
+			return utils.createError(
+				"Invalid password (passwords must be between 6 and 20 characters long)"
+			);
+		}
+
+		if (password != confirmPassword) {
+			return utils.createError("Passwords do not match");
+		}
+
+		console.log("Updating Password for", email);
+		let user = createUserFromSettings(await database.findUserByEmail(email));
+
+		// Hash users password to store in database
+		const salt = await bcrypt.genSalt();
+		const hashedPassword = await bcrypt.hash(password, salt);
+
+		user.passwordHash = hashedPassword;
+		user.updateSettings();
+
+		// Delete the FPK associated with the email so that the reset password link becomes invalid
+		database.deleteFPKEmailPair(email);
+
+		return utils.createSuccess({ email });
 	},
 };
 
