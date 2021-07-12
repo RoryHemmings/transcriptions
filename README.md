@@ -1,2 +1,2 @@
 # transcriptions
- Open archive of sheet music transcriptions
+ Like youtube, but for sheet music transcriptions. 
